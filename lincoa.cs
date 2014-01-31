@@ -496,7 +496,7 @@ namespace Cureos.Numerics
                     double TEMP = ZMAT[KNEW, J];
                     if (J < IDZ) TEMP = -TEMP;
                     for (int K = 1; K <= NPT; K++)
-                        PQW[K] = PQW[K] + TEMP * ZMAT[K, J];
+                        PQW[K] += TEMP * ZMAT[K, J];
                 }
                 QMSTEP(N, NPT, M, AMAT, B, XPT, XOPT, NACT, IACT, RESCON, QFAC, KOPT, KNEW, DEL, STEP, W, PQW, W(NP),
                     W(NP + M), ref IFEAS);
@@ -1407,7 +1407,7 @@ namespace Cureos.Numerics
                         for (int J = 1; J <= N; ++J)
                             SP[NPT + K] += XPT[K, J] * STEP[J];
                     }
-                    UPDATE(N, NPT, XPT, BMAT, ZMAT, IDZ, NDIM, SP, STEP, KBASE, NF, PQW, W);
+                    UPDATE(N, NPT, XPT, BMAT, ZMAT, IDZ, NDIM, SP, STEP, KBASE, ref NF, PQW, W);
                     for (int I = 1; I <= N; ++I)
                         XPT[NF, I] = STEP[I];
                 }
@@ -1824,7 +1824,7 @@ namespace Cureos.Numerics
             TRSTEP_40:
 
             ++NCALL;
-            GETACT(N, M, AMAT, B, NACT, IACT, QFAC, RFAC, SNORM, RESNEW, RESACT, G, DW, W, W(N + 1));
+            GETACT(N, M, AMAT, B, NACT, IACT, QFAC, RFAC, SNORM, RESNEW, RESACT, G, DW, W,W(N+1));
             if (W[N + 1] == ZERO) goto TRSTEP_320;
             double SCALE = 0.2 * SNORM / Math.Sqrt(W[N + 1]);
             for (int I = 1; I <= N; ++I)

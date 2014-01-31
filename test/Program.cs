@@ -138,6 +138,7 @@ namespace test
                 int MAXFUN = 10000;
                 Console.WriteLine("Output from LINCOA with  NPT ={0,4:D}  and  RHOEND ={1,12:E4}", NPT, RHOEND);
                 Lincoa.LINCOA(CALFUN, N, NPT, M, A, IA, B, X, RHOBEG, RHOEND, IPRINT, MAXFUN, Console.Out);
+                Console.WriteLine();
             }
             Console.ReadLine();
         }

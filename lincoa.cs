@@ -20,12 +20,12 @@ namespace Cureos.Numerics
         {
             InProgress,
             Success,
-            TooFew_N,
+            N_TooSmall,
             NPT_OutOfRange,
             MAXFUN_NotLargerThan_NPT,
             ConstraintGradientIsZero,
             MAXFUN_Reached,
-            X_UpdateHamperedByRoundingErrors,
+            X_RoundingErrorsPreventUpdate,
             UpdatingFormulaDenominatorZero
         }
 
@@ -143,7 +143,7 @@ namespace Cureos.Numerics
             if (N <= 1)
             {
                 PRINT(logger, LINCOA_10);
-                return Status.TooFew_N;
+                return Status.N_TooSmall;
             }
             if (NPT < N + 2 || NPT > ((N + 2) * NP) / 2)
             {
@@ -440,7 +440,7 @@ namespace Cureos.Numerics
                 SNORM = DELTA;
                 for (int I = 1; I <= N; ++I)
                     XNEW[I] = GOPT[I];
-                TRSTEP(N, NPT, M, AMAT, B, XPT, HQ, PQ, ref NACT, IACT, RESCON, QFAC, RFAC, SNORM, STEP, XNEW);
+                TRSTEP(N, NPT, M, AMAT, B, XPT, HQ, PQ, ref NACT, IACT, RESCON, QFAC, RFAC, ref SNORM, STEP, XNEW);
 //
 //     A trust region step is applied whenever its length, namely SNORM, is at
 //       least HALF*DELTA. It is also applied if its length is at least 0.1999
@@ -545,7 +545,7 @@ namespace Cureos.Numerics
             {
                 IFEAS = 0;
                 if (IPRINT > 0) PRINT(logger, LINCOB_250);
-                status = Status.X_UpdateHamperedByRoundingErrors;
+                status = Status.X_RoundingErrorsPreventUpdate;
                 goto LINCOB_600;
             }
             if (KSAVE <= 0) IFEAS = 1;
@@ -1744,7 +1744,7 @@ namespace Cureos.Numerics
         }
 
         private static void TRSTEP(int N, int NPT, int M, double[,] AMAT, double[] B, double[,] XPT, double[] HQ,
-            double[] PQ, ref int NACT, int[] IACT, double[] RESCON, double[,] QFAC, double[] RFAC, double SNORM,
+            double[] PQ, ref int NACT, int[] IACT, double[] RESCON, double[,] QFAC, double[] RFAC, ref double SNORM,
             double[] STEP, double[] G)
         {
             double[] RESNEW = new double[1 + M];
@@ -1824,7 +1824,7 @@ namespace Cureos.Numerics
             ++NCALL;
             double DSQ = GETACT(N, M, AMAT, B, ref NACT, IACT, QFAC, RFAC, SNORM, RESNEW, RESACT, G, DW);
             if (DSQ == ZERO) goto TRSTEP_320;
-            double SCALE = 0.2 * SNORM / Math.Sqrt(W[N + 1]);
+            double SCALE = 0.2 * SNORM / Math.Sqrt(DSQ);
             for (int I = 1; I <= N; ++I)
                 DW[I] *= SCALE;
 //

@@ -5,6 +5,7 @@ using System.Linq;
 
 namespace Cureos.Numerics
 {
+
     #region DELEGATES
 
     public delegate void CalfunDel(int n, double[] x, ref double f);
@@ -29,15 +30,15 @@ namespace Cureos.Numerics
         }
 
         #endregion
-        
+
         #region FIELDS
 
-        private const double ZERO=0.0;
-        private const double HALF=0.5;
-        private const double ONE=1.0;
-        private const double TENTH=0.1;
-        private const double TINY=1.0E-60;
-        private const double CTEST=0.01;
+        private const double ZERO = 0.0;
+        private const double HALF = 0.5;
+        private const double ONE = 1.0;
+        private const double TENTH = 0.1;
+        private const double TINY = 1.0E-60;
+        private const double CTEST = 0.01;
 
         private static readonly string LF = Environment.NewLine;
 
@@ -48,12 +49,22 @@ namespace Cureos.Numerics
         private static readonly string LINCOA_70 = "LINCOA has made the initial X feasible by increasing part(s) of B.";
 
         private static readonly string LINCOB_230 = "Return from LINCOA because CALFUN has been called MAXFUN times.";
-        private static readonly string LINCOB_250 = "Return from LINCOA because rounding errors prevent reasonable changes to X.";
-        private static readonly string LINCOB_260 = "Function number {0,6:D}    F = {1,18:E10}    The corresponding X is:" + LF + "{2}";
-        private static readonly string LINCOB_320 = "Return from LINCOA because the denominator of the updating formula is zero.";
+
+        private static readonly string LINCOB_250 =
+            "Return from LINCOA because rounding errors prevent reasonable changes to X.";
+
+        private static readonly string LINCOB_260 =
+            "Function number {0,6:D}    F = {1,18:E10}    The corresponding X is:" + LF + "{2}";
+
+        private static readonly string LINCOB_320 =
+            "Return from LINCOA because the denominator of the updating formula is zero.";
+
         private static readonly string LINCOB_570 = LF;
         private static readonly string LINCOB_580 = "New RHO = {0,11:E4}     Number of function values = {1,6:D}";
-        private static readonly string LINCOB_590 = "Least value of F = {0,23:E15}         The corresponding X is:" + LF + "{2}";
+
+        private static readonly string LINCOB_590 = "Least value of F = {0,23:E15}         The corresponding X is:" + LF +
+                                                    "{2}";
+
         private static readonly string LINCOB_620 = "At the return from LINCOA     Number of function values = {0,6:D}";
 
         private static readonly string PRELIM_140 = LINCOB_260;
@@ -159,8 +170,8 @@ namespace Cureos.Numerics
 //       and right hand sides into working space, after increasing the right
 //       hand sides if necessary so that the starting point is feasible.
 //
-            double[,] AMAT = new double[1+N,1+M];
-            double[] BB = new double[1+M];    // B in LINCOB
+            double[,] AMAT = new double[1 + N, 1 + M];
+            double[] BB = new double[1 + M]; // B in LINCOB
             int IFLAG = 0;
             if (M > 0)
             {
@@ -183,7 +194,7 @@ namespace Cureos.Numerics
                     BB[J] = Math.Max(B[J], SUM) / TEMP;
                     for (int I = 1; I <= N; ++I)
                     {
-                        AMAT[I,J] = A[I, J] / TEMP;
+                        AMAT[I, J] = A[I, J] / TEMP;
                     }
                 }
             }
@@ -198,34 +209,36 @@ namespace Cureos.Numerics
             int IAMAT = Math.Max(M + 3 * N, Math.Max(2 * M + N, 2 * NPT)) + 1;
             int NDIM = NPT + N;
 
-            double[] XBASE = new double[1+N];
-            double[,] XPT = new double[1+NPT,1+N];
-            double[] FVAL = new double[1+NPT];
-            double[] XSAV = new double[1+N];
-            double[] XOPT = new double[1+N];
-            double[] GOPT = new double[1+N];
-            double[] HQ = new double[1+(N * NP) / 2];
-            double[] PQ = new double[1+NPT];
-            double[,] BMAT = new double[1+NDIM,1+N];
-            double[,] ZMAT = new double[1+NPT,1+NPTM];
-            double[] STEP = new double[1+N];
-            double[] SP = new double[1+ NPT + NPT];
-            double[] XNEW = new double[1+N];
-            int[] IACT = new int[1+N];
-            double[] RESCON = new double[1+M];
-            double[,] QFAC = new double[1+N,1+N];
+            double[] XBASE = new double[1 + N];
+            double[,] XPT = new double[1 + NPT, 1 + N];
+            double[] FVAL = new double[1 + NPT];
+            double[] XSAV = new double[1 + N];
+            double[] XOPT = new double[1 + N];
+            double[] GOPT = new double[1 + N];
+            double[] HQ = new double[1 + (N * NP) / 2];
+            double[] PQ = new double[1 + NPT];
+            double[,] BMAT = new double[1 + NDIM, 1 + N];
+            double[,] ZMAT = new double[1 + NPT, 1 + NPTM];
+            double[] STEP = new double[1 + N];
+            double[] SP = new double[1 + NPT + NPT];
+            double[] XNEW = new double[1 + N];
+            int[] IACT = new int[1 + N];
+            double[] RESCON = new double[1 + M];
+            double[,] QFAC = new double[1 + N, 1 + N];
             double[] RFAC = new double[1 + (N * NP) / 2];
-            double[] PQW = new double[1+NPT+N];
+            double[] PQW = new double[1 + NPT + N];
             double[] W = new double[IAMAT];
 
 //
 //     The above settings provide a partition of W for subroutine LINCOB.
 //
-            return LINCOB(CALFUN, N, NPT, M, AMAT, BB, X, RHOBEG, RHOEND, IPRINT, MAXFUN, XBASE, XPT, FVAL, XSAV, XOPT, GOPT, HQ,
+            return LINCOB(CALFUN, N, NPT, M, AMAT, BB, X, RHOBEG, RHOEND, IPRINT, MAXFUN, XBASE, XPT, FVAL, XSAV, XOPT,
+                GOPT, HQ,
                 PQ, BMAT, ZMAT, NDIM, STEP, SP, XNEW, IACT, RESCON, QFAC, RFAC, PQW, W, logger);
         }
 
-        private static Status LINCOB(CalfunDel CALFUN, int N, int NPT, int M, double[,] AMAT, double[] B, double[] X, double RHOBEG,
+        private static Status LINCOB(CalfunDel CALFUN, int N, int NPT, int M, double[,] AMAT, double[] B, double[] X,
+            double RHOBEG,
             double RHOEND, int IPRINT, int MAXFUN, double[] XBASE, double[,] XPT, double[] FVAL, double[] XSAV,
             double[] XOPT, double[] GOPT, double[] HQ, double[] PQ, double[,] BMAT, double[,] ZMAT, int NDIM,
             double[] STEP, double[] SP, double[] XNEW, int[] IACT, double[] RESCON, double[,] QFAC, double[] RFAC,
@@ -299,7 +312,8 @@ namespace Cureos.Numerics
 //       is set so that XPT(KOPT,.) is the initial trust region centre.
 //
             int KOPT, IDZ;
-            PRELIM(CALFUN, N, NPT, M, AMAT, B, X, RHOBEG, IPRINT, XBASE, XPT, FVAL, XSAV, XOPT, GOPT, out KOPT, HQ, PQ, BMAT,
+            PRELIM(CALFUN, N, NPT, M, AMAT, B, X, RHOBEG, IPRINT, XBASE, XPT, FVAL, XSAV, XOPT, GOPT, out KOPT, HQ, PQ,
+                BMAT,
                 ZMAT, out IDZ, NDIM, SP, RESCON, STEP, PQW, W, logger);
 //
 //     Begin the iterative procedure.
@@ -619,7 +633,7 @@ namespace Cureos.Numerics
 //       can be moved. If STEP is a trust region step, then KNEW is zero at
 //       present, but a positive value is picked by subroutine UPDATE.
 //
-            UPDATE(N, NPT, XPT, BMAT, ZMAT, IDZ, NDIM, SP, STEP, KOPT, KNEW, PQW, W);
+            UPDATE(N, NPT, XPT, BMAT, ZMAT, IDZ, NDIM, SP, STEP, KOPT, ref KNEW, PQW, W);
             if (KNEW == 0)
             {
                 if (IPRINT > 0) PRINT(logger, LINCOB_320);
@@ -1775,7 +1789,7 @@ namespace Cureos.Numerics
 //
             if (M > 0)
             {
-                for ( /*10*/ int J = 1; J <= M; ++J)
+                for (int J = 1; J <= M; ++J)
                 {
                     RESNEW[J] = RESCON[J];
                     if (RESCON[J] >= SNORM)
@@ -1786,20 +1800,18 @@ namespace Cureos.Numerics
                     {
                         RESNEW[J] = Math.Max(RESNEW[J], TINY);
                     }
-                    /*10*/
                 }
                 if (NACT > 0)
                 {
-                    for ( /*20*/ int K = 1; K <= NACT; ++K)
+                    for (int K = 1; K <= NACT; ++K)
                     {
                         RESACT[K] = RESCON[IACT[K]];
-                        /*20*/
                         RESNEW[IACT[K]] = ZERO;
                     }
                 }
             }
-            for ( /*30*/ int I = 1; I <= N; ++I)
-                /*30*/ STEP[I] = ZERO;
+            for (int I = 1; I <= N; ++I)
+                STEP[I] = ZERO;
             double SS = ZERO;
             double REDUCT = ZERO;
             int NCALL = 0;
@@ -1815,8 +1827,8 @@ namespace Cureos.Numerics
             GETACT(N, M, AMAT, B, NACT, IACT, QFAC, RFAC, SNORM, RESNEW, RESACT, G, DW, W, W(N + 1));
             if (W[N + 1] == ZERO) goto TRSTEP_320;
             double SCALE = 0.2 * SNORM / Math.Sqrt(W[N + 1]);
-            for ( /*50*/ int I = 1; I <= N; ++I)
-                /*50*/ DW[I] *= SCALE;
+            for (int I = 1; I <= N; ++I)
+                DW[I] *= SCALE;
 //
 //     If the modulus of the residual of an active constraint is substantial,
 //       then set D to the shortest move from STEP to the boundaries of the
@@ -1825,34 +1837,32 @@ namespace Cureos.Numerics
             double RESMAX = ZERO;
             if (NACT > 0)
             {
-                for ( /*60*/ int K = 1; K <= NACT; ++K)
-                    /*60*/ RESMAX = Math.Max(RESMAX, RESACT[K]);
+                for (int K = 1; K <= NACT; ++K)
+                    RESMAX = Math.Max(RESMAX, RESACT[K]);
             }
             double GAMMA = ZERO;
             if (RESMAX > 1.0E-4 * SNORM)
             {
                 int IR = 0;
-                for ( /*80*/ int K = 1; K <= NACT; ++K)
+                for (int K = 1; K <= NACT; ++K)
                 {
                     double TEMP = RESACT[K];
                     if (K >= 2)
                     {
-                        for ( /*70*/ int I = 1; I <= K - 1; ++I)
+                        for (int I = 1; I <= K - 1; ++I)
                         {
                             ++IR;
-                            /*70*/
                             TEMP -= RFAC[IR] * W[I];
                         }
                     }
                     ++IR;
-                    /*80*/
                     W[K] = TEMP / RFAC[IR];
                 }
-                for ( /*90*/ int I = 1; I <= N; ++I)
+                for (int I = 1; I <= N; ++I)
                 {
                     D[I] = ZERO;
-                    for ( /*90*/ int K = 1; K <= NACT; ++K)
-                        /*90*/ D[I] += W[K] * QFAC[I, K];
+                    for (int K = 1; K <= NACT; ++K)
+                        D[I] += W[K] * QFAC[I, K];
                 }
 //
 //     The vector D that has just been calculated is also the shortest move
@@ -1863,12 +1873,11 @@ namespace Cureos.Numerics
                 double RHS = SNSQ;
                 double DS = ZERO;
                 double DD = ZERO;
-                for ( /*100*/ int I = 1; I <= N; ++I)
+                for (int I = 1; I <= N; ++I)
                 {
                     double SUM = STEP[I] + DW[I];
                     RHS -= SUM * SUM;
                     DS += D[I] * SUM;
-                    /*100*/
                     DD += D[I] * D[I];
                 }
                 if (RHS > ZERO)
@@ -1899,10 +1908,9 @@ namespace Cureos.Numerics
                         {
                             double AD = ZERO;
                             double ADW = ZERO;
-                            for ( /*120*/ int I = 1; I <= N; ++I)
+                            for (int I = 1; I <= N; ++I)
                             {
                                 AD += AMAT[I, J] * D[I];
-                                /*120*/
                                 ADW += AMAT[I, J] * DW[I];
                             }
                             if (AD > ZERO)
@@ -1923,14 +1931,14 @@ namespace Cureos.Numerics
             int ICOUNT;
             if (GAMMA <= ZERO)
             {
-                for ( /*130*/ int I = 1; I <= N; ++I)
-                    /*130*/ D[I] = DW[I];
+                for (int I = 1; I <= N; ++I)
+                    D[I] = DW[I];
                 ICOUNT = NACT;
             }
             else
             {
-                for ( /*140*/ int I = 1; I <= N; ++I)
-                    /*140*/ D[I] = DW[I] + GAMMA * D[I];
+                for (int I = 1; I <= N; ++I)
+                    D[I] = DW[I] + GAMMA * D[I];
                 ICOUNT = NACT - 1;
             }
             double ALPBD = ONE;
@@ -1942,21 +1950,20 @@ namespace Cureos.Numerics
             TRSTEP_150:
 
             ++ICOUNT;
-            double RHS = SNSQ - SS;
-            if (RHS <= ZERO) goto TRSTEP_320;
-            double DG = ZERO;
-            double DS = ZERO;
-            double DD = ZERO;
-            for ( /*160*/ int I = 1; I <= N; ++I)
-            {
-                DG += D[I] * G[I];
-                DS += D[I] * STEP[I];
-                /*160*/
-                DD += D[I] * D[I];
-            }
-            if (DG >= ZERO) goto TRSTEP_320;
             double ALPHA;
+            double DG = ZERO;
             {
+                double RHS = SNSQ - SS;
+                if (RHS <= ZERO) goto TRSTEP_320;
+                double DS = ZERO;
+                double DD = ZERO;
+                for (int I = 1; I <= N; ++I)
+                {
+                    DG += D[I] * G[I];
+                    DS += D[I] * STEP[I];
+                    DD += D[I] * D[I];
+                }
+                if (DG >= ZERO) goto TRSTEP_320;
                 double TEMP = Math.Sqrt(RHS * DD + DS * DS);
                 if (DS <= ZERO)
                 {
@@ -1966,39 +1973,38 @@ namespace Cureos.Numerics
                 {
                     ALPHA = RHS / (TEMP + DS);
                 }
+                if (-ALPHA * DG <= CTEST * REDUCT) goto TRSTEP_320;
             }
-            if (-ALPHA * DG <= CTEST * REDUCT) goto TRSTEP_320;
 //
 //     Set DW to the change in gradient along D.
 //
             int IH = 0;
-            for ( /*170*/ int J = 1; J <= N; ++J)
+            for (int J = 1; J <= N; ++J)
             {
                 DW[J] = ZERO;
-                for ( /*170*/ int I = 1; I <= J; ++I)
+                for (int I = 1; I <= J; ++I)
                 {
                     ++IH;
                     if (I < J) DW[J] += HQ[IH] * D[I];
-                    /*170*/
                     DW[I] += HQ[IH] * D[J];
                 }
             }
-            for ( /*190*/ int K = 1; K <= NPT; ++K)
+            for (int K = 1; K <= NPT; ++K)
             {
                 double TEMP = ZERO;
-                for ( /*180*/ int J = 1; J <= N; ++J)
-                    /*180*/ TEMP += XPT[K, J] * D[J];
+                for (int J = 1; J <= N; ++J)
+                    TEMP += XPT[K, J] * D[J];
                 TEMP *= PQ[K];
-                for ( /*190*/ int I = 1; I <= N; ++I)
-                    /*190*/ DW[I] += TEMP * XPT[K, I];
+                for (int I = 1; I <= N; ++I)
+                    DW[I] += TEMP * XPT[K, I];
             }
 //
 //     Set DGD to the curvature of the model along D. Then reduce ALPHA if
 //       necessary to the value that minimizes the model.
 //
             double DGD = ZERO;
-            for ( /*200*/ int I = 1; I <= N; ++I)
-                /*200*/ DGD += D[I] * DW[I];
+            for (int I = 1; I <= N; ++I)
+                DGD += D[I] * DW[I];
             double ALPHT = ALPHA;
             if (DG + ALPHA * DGD > ZERO)
             {
@@ -2012,20 +2018,19 @@ namespace Cureos.Numerics
             int JSAV = 0;
             if (M > 0)
             {
-                for ( /*220*/ int J = 1; J <= M; ++J)
+                for (int J = 1; J <= M; ++J)
                 {
                     double AD = ZERO;
                     if (RESNEW[J] > ZERO)
                     {
-                        for ( /*210*/ int I = 1; I <= N; ++I)
-                            /*210*/ AD += AMAT[I, J] * D[I];
+                        for (int I = 1; I <= N; ++I)
+                            AD += AMAT[I, J] * D[I];
                         if (ALPHA * AD > RESNEW[J])
                         {
                             ALPHA = RESNEW[J] / AD;
                             JSAV = J;
                         }
                     }
-                    /*220*/
                     W[J] = AD;
                 }
             }
@@ -2036,28 +2041,26 @@ namespace Cureos.Numerics
 //     Update STEP, G, RESNEW, RESACT and REDUCT.
 //
             SS = ZERO;
-            for ( /*230*/ int I = 1; I <= N; ++I)
+            for (int I = 1; I <= N; ++I)
             {
                 STEP[I] += ALPHA * D[I];
                 SS += STEP[I] * STEP[I];
-                /*230*/
                 G[I] += ALPHA * DW[I];
             }
             if (M > 0)
             {
-                for ( /*240*/ int J = 1; J <= M; ++J)
+                for (int J = 1; J <= M; ++J)
                 {
                     if (RESNEW[J] > ZERO)
                     {
                         RESNEW[J] = Math.Max(RESNEW[J] - ALPHA * W[J], TINY);
                     }
-                    /*240*/
                 }
             }
             if (ICOUNT == NACT && NACT > 0)
             {
-                for ( /*250*/ int K = 1; K <= NACT; ++K)
-                    /*250*/ RESACT[K] *= (ONE - GAMMA);
+                for (int K = 1; K <= NACT; ++K)
+                    RESACT[K] *= (ONE - GAMMA);
             }
             REDUCT -= ALPHA * (DG + HALF * ALPHA * DGD);
 //
@@ -2082,25 +2085,24 @@ namespace Cureos.Numerics
 //
             if (NACT > 0)
             {
-                for ( /*260*/int J = NACT + 1; J <= N; ++J)
+                for (int J = NACT + 1; J <= N; ++J)
                 {
                     W[J] = ZERO;
-                    for ( /*260*/ int I = 1; I <= N; ++I)
-                        /*260*/ W[J] += G[I] * QFAC[I, J];
+                    for (int I = 1; I <= N; ++I)
+                        W[J] += G[I] * QFAC[I, J];
                 }
-                for ( /*280*/ int I = 1; I <= N; ++I)
+                for (int I = 1; I <= N; ++I)
                 {
                     double TEMP = ZERO;
-                    for ( /*270*/ int J = NACT + 1; J <= N; ++J)
-                        /*270*/ TEMP += QFAC[I, J] * W[J];
-                    /*280*/
+                    for (int J = NACT + 1; J <= N; ++J)
+                        TEMP += QFAC[I, J] * W[J];
                     W[N + I] = TEMP;
                 }
             }
             else
             {
-                for ( /*290*/ int I = 1; I <= N; ++I)
-                    /*290*/ W[N + I] = G[I];
+                for (int I = 1; I <= N; ++I)
+                    W[N + I] = G[I];
             }
             double BETA;
             if (ICOUNT == NACT)
@@ -2110,12 +2112,12 @@ namespace Cureos.Numerics
             else
             {
                 double WGD = ZERO;
-                for ( /*300*/ int I = 1; I <= N; ++I)
-                    /*300*/ WGD += W[N + I] * DW[I];
+                for (int I = 1; I <= N; ++I)
+                    WGD += W[N + I] * DW[I];
                 BETA = WGD / DGD;
             }
-            for ( /*310*/ int I = 1; I <= N; ++I)
-                /*310*/ D[I] = -W[N + I] + BETA * D[I];
+            for (int I = 1; I <= N; ++I)
+                D[I] = -W[N + I] + BETA * D[I];
             ALPBD = ZERO;
             goto TRSTEP_150;
 //
@@ -2129,10 +2131,9 @@ namespace Cureos.Numerics
             if (NCALL > 1) G[1] = ONE;
         }
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% update.f %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      private void UPDATE (N,NPT,XPT,BMAT,ZMAT,IDZ,NDIM,SP,STEP,  KOPT,KNEW,VLAG,W)
-      IMPLICIT REAL*8 (A-H,O-Z)
-      DIMENSION XPT(NPT,*),BMAT(NDIM,*),ZMAT(NPT,*),SP(*),STEP(*),  VLAG(*),W(*)
+        private static void UPDATE(int N, int NPT, double[,] XPT, double[,] BMAT, double[,] ZMAT, int IDZ, int NDIM,
+            double[] SP, double[] STEP, int KOPT, ref int KNEW, double[] VLAG, double[] W)
+        {
 //
 //     The arguments N, NPT, XPT, BMAT, ZMAT, IDZ, NDIM ,SP and STEP are
 //       identical to the corresponding arguments in SUBROUTINE LINCOB.
@@ -2153,184 +2154,228 @@ namespace Cureos.Numerics
 //
 //     Set some constants.
 //
-      NPTM=NPT-N-1
+            double NPTM = NPT - N - 1;
 //
 //     Calculate VLAG and BETA for the current choice of STEP. The first NPT
 //       elements of VLAG are set to the values of the Lagrange functions at
 //       XPT(KOPT,.)+STEP(.). The first NPT components of W_check are held
 //       in W, where W_check is defined in a paper on the updating method.
 //
-      for (20 int K=1; K<=NPT; ++K) {
-      W[K]=SP(NPT+K)*(HALF*SP(NPT+K)+SP[K])
-      SUM=ZERO
-      for (10 int J=1; J<=N; ++J) {
-   10 SUM=SUM+BMAT[K,J]*STEP[J]
-   20 VLAG[K]=SUM
-      BETA=ZERO
-      for (40 K=1,NPTM
-      SUM=ZERO
-      for (30 int I=1; I<=NPT; ++I) {
-   30 SUM=SUM+ZMAT(I,K)*W[I]
-      if (K < IDZ) {
-          BETA=BETA+SUM*SUM
-          SUM=-SUM
-      } else {
-          BETA=BETA-SUM*SUM
-      }
-      for (40 int I=1; I<=NPT; ++I) {
-   40 VLAG[I]=VLAG[I]+SUM*ZMAT(I,K)
-      BSUM=ZERO
-      DX=ZERO
-      SSQ=ZERO
-      for (70 int J=1; J<=N; ++J) {
-      SUM=ZERO
-      for (50 int I=1; I<=NPT; ++I) {
-   50 SUM=SUM+W[I]*BMAT[I,J]
-      BSUM=BSUM+SUM*STEP[J]
-      JP=NPT+J
-      for (60 K=1,N
-   60 SUM=SUM+BMAT(JP,K)*STEP[K]
-      VLAG(JP)=SUM
-      BSUM=BSUM+SUM*STEP[J]
-      DX=DX+STEP[J]*XPT(KOPT,J)
-   70 SSQ=SSQ+STEP[J]**2
-      BETA=DX*DX+SSQ*(SP[KOPT]+DX+DX+HALF*SSQ)+BETA-BSUM
-      VLAG[KOPT]=VLAG[KOPT]+ONE
+            for (int K = 1; K <= NPT; ++K)
+            {
+                W[K] = SP[NPT + K] * (HALF * SP[NPT + K] + SP[K]);
+                double SUM = ZERO;
+                for (int J = 1; J <= N; ++J)
+                    SUM += BMAT[K, J] * STEP[J];
+                VLAG[K] = SUM;
+            }
+            double BETA = ZERO;
+            for (int K = 1; K <= NPTM; ++K)
+            {
+                double SUM = ZERO;
+                for (int I = 1; I <= NPT; ++I)
+                    SUM = SUM + ZMAT[I, K] * W[I];
+                if (K < IDZ)
+                {
+                    BETA += SUM * SUM;
+                    SUM = -SUM;
+                }
+                else
+                {
+                    BETA -= SUM * SUM;
+                }
+                for (int I = 1; I <= NPT; ++I)
+                    VLAG[I] = VLAG[I] + SUM * ZMAT[I, K];
+            }
+            double BSUM = ZERO;
+            double DX = ZERO;
+            double SSQ = ZERO;
+            for (int J = 1; J <= N; ++J)
+            {
+                double SUM = ZERO;
+                for (int I = 1; I <= NPT; ++I)
+                    SUM += W[I] * BMAT[I, J];
+                BSUM += SUM * STEP[J];
+                int JP = NPT + J;
+                for (int K = 1; K <= N; ++K)
+                    SUM += BMAT[JP, K] * STEP[K];
+                VLAG[JP] = SUM;
+                BSUM += SUM * STEP[J];
+                DX += STEP[J] * XPT[KOPT, J];
+                SSQ += STEP[J] * STEP[J];
+            }
+            BETA = DX * DX + SSQ * (SP[KOPT] + DX + DX + HALF * SSQ) + BETA - BSUM;
+            VLAG[KOPT] += +ONE;
 //
 //     If KNEW is zero initially, then pick the index of the interpolation
 //       point to be deleted, by maximizing the absolute value of the
 //       denominator of the updating formula times a weighting factor.
 //       
 //
-      if (KNEW == 0) {
-          DENMAX=ZERO
-          for (100 int K=1; K<=NPT; ++K) {
-          HDIAG=ZERO
-          for (80 int J=1; J<=NPTM; ++J) {
-          TEMP=ONE
-          if (J < IDZ) TEMP=-ONE
-   80     HDIAG=HDIAG+TEMP*ZMAT[K,J]**2
-          DENABS=Math.Abs(BETA*HDIAG+VLAG[K]**2)
-          DISTSQ=ZERO
-          for (90 int J=1; J<=N; ++J) {
-   90     DISTSQ=DISTSQ+(XPT[K,J]-XPT(KOPT,J))**2
-          TEMP=DENABS*DISTSQ*DISTSQ
-          if (TEMP > DENMAX) {
-              DENMAX=TEMP
-              KNEW=K
-          }
-  100     }
-      }
+            if (KNEW == 0)
+            {
+                double DENMAX = ZERO;
+                for (int K = 1; K <= NPT; ++K)
+                {
+                    double HDIAG = ZERO;
+                    for (int J = 1; J <= NPTM; ++J)
+                    {
+                        double TEMP = ONE;
+                        if (J < IDZ) TEMP = -ONE;
+                        HDIAG += TEMP * ZMAT[K, J] * ZMAT[K, J];
+                    }
+                    double DENABS = Math.Abs(BETA * HDIAG + VLAG[K] * VLAG[K]);
+                    double DISTSQ = ZERO;
+                    for (int J = 1; J <= N; ++J)
+                        DISTSQ += Math.Pow(XPT[K, J] - XPT[KOPT, J], 2.0);
+                    {
+                        double TEMP = DENABS * DISTSQ * DISTSQ;
+                        if (TEMP > DENMAX)
+                        {
+                            DENMAX = TEMP;
+                            KNEW = K;
+                        }
+                    }
+                }
+            }
 //
 //     Apply the rotations that put zeros in the KNEW-th row of ZMAT.
 //
-      JL=1
-      if (NPTM >= 2) {
-          for (120 J=2,NPTM
-          if (J == IDZ) {
-              JL=IDZ
-          } else if (ZMAT(KNEW,J) != ZERO) {
-              TEMP=Math.Sqrt(ZMAT(KNEW,JL)**2+ZMAT(KNEW,J)**2)
-              TEMPA=ZMAT(KNEW,JL)/TEMP
-              TEMPB=ZMAT(KNEW,J)/TEMP
-              for (110 int I=1; I<=NPT; ++I) {
-              TEMP=TEMPA*ZMAT(I,JL)+TEMPB*ZMAT[I,J]
-              ZMAT[I,J]=TEMPA*ZMAT[I,J]-TEMPB*ZMAT(I,JL)
-  110         ZMAT(I,JL)=TEMP
-              ZMAT(KNEW,J)=ZERO
-          }
-  120     }
-      }
+            int JL = 1;
+            double TEMPA, TEMPB;
+            if (NPTM >= 2)
+            {
+                for (int J = 2; J <= NPTM; ++J)
+                {
+                    if (J == IDZ)
+                    {
+                        JL = IDZ;
+                    }
+                    else if (ZMAT[KNEW, J] != ZERO)
+                    {
+                        double TEMP = Math.Sqrt(ZMAT[KNEW, JL] * ZMAT[KNEW, JL] + ZMAT[KNEW, J] * ZMAT[KNEW, J]);
+                        TEMPA = ZMAT[KNEW, JL] / TEMP;
+                        TEMPB = ZMAT[KNEW, J] / TEMP;
+                        for (int I = 1; I <= NPT; ++I)
+                        {
+                            TEMP = TEMPA * ZMAT[I, JL] + TEMPB * ZMAT[I, J];
+                            ZMAT[I, J] = TEMPA * ZMAT[I, J] - TEMPB * ZMAT[I, JL];
+                            ZMAT[I, JL] = TEMP;
+                        }
+                        ZMAT[KNEW, J] = ZERO;
+                    }
+                }
+            }
 //
 //     Put the first NPT components of the KNEW-th column of the Z Z^T matrix
 //       into W, and calculate the parameters of the updating formula.
 //
-      TEMPA=ZMAT(KNEW,1)
-      if (IDZ >= 2) TEMPA=-TEMPA
-      if (JL > 1) TEMPB=ZMAT(KNEW,JL)
-      for (130 int I=1; I<=NPT; ++I) {
-      W[I]=TEMPA*ZMAT(I,1)
-      if (JL > 1) W[I]=W[I]+TEMPB*ZMAT(I,JL)
-  130 }
-      ALPHA=W(KNEW)
-      TAU=VLAG(KNEW)
-      TAUSQ=TAU*TAU
-      DENOM=ALPHA*BETA+TAUSQ
-      VLAG(KNEW)=VLAG(KNEW)-ONE
-      if (DENOM == ZERO) {
-          KNEW=0
-          goto 180
-      }
-      SQRTDN=Math.Sqrt(Math.Abs(DENOM))
+            TEMPA = ZMAT[KNEW, 1];
+            if (IDZ >= 2) TEMPA = -TEMPA;
+            if (JL > 1) TEMPB = ZMAT[KNEW, JL];
+            for (int I = 1; I <= NPT; ++I)
+            {
+                W[I] = TEMPA * ZMAT[I, 1];
+                if (JL > 1) W[I] += TEMPB * ZMAT[I, JL];
+            }
+            double ALPHA = W[KNEW];
+            double TAU = VLAG[KNEW];
+            double TAUSQ = TAU * TAU;
+            double DENOM = ALPHA * BETA + TAUSQ;
+            VLAG[KNEW] -= ONE;
+            if (DENOM == ZERO)
+            {
+                KNEW = 0;
+                return;
+            }
+            double SQRTDN = Math.Sqrt(Math.Abs(DENOM));
 //
 //     Complete the updating of ZMAT when there is only one nonzero element
 //       in the KNEW-th row of the new matrix ZMAT. IFLAG is set to one when
 //       the value of IDZ is going to be reduced.
 //
-      IFLAG=0
-      if (JL == 1) {
-          TEMPA=TAU/SQRTDN
-          TEMPB=ZMAT(KNEW,1)/SQRTDN
-          for (140 int I=1; I<=NPT; ++I) {
-  140     ZMAT(I,1)=TEMPA*ZMAT(I,1)-TEMPB*VLAG[I]
-          if (DENOM < ZERO) {
-              if (IDZ == 1) {
-                  IDZ=2
-              } else {
-                  IFLAG=1
-              }
-          }
-      } else {
+            int IFLAG = 0;
+            if (JL == 1)
+            {
+                TEMPA = TAU / SQRTDN;
+                TEMPB = ZMAT[KNEW, 1] / SQRTDN;
+                for (int I = 1; I <= NPT; ++I)
+                    ZMAT[I, 1] = TEMPA * ZMAT[I, 1] - TEMPB * VLAG[I];
+                if (DENOM < ZERO)
+                {
+                    if (IDZ == 1)
+                    {
+                        IDZ = 2;
+                    }
+                    else
+                    {
+                        IFLAG = 1;
+                    }
+                }
+            }
+            else
+            {
 //
 //     Complete the updating of ZMAT in the alternative case.
 //
-          JA=1
-          if (BETA >= ZERO) JA=JL
-          JB=JL+1-JA
-          TEMP=ZMAT(KNEW,JB)/DENOM
-          TEMPA=TEMP*BETA
-          TEMPB=TEMP*TAU
-          TEMP=ZMAT(KNEW,JA)
-          SCALA=ONE/Math.Sqrt(Math.Abs(BETA)*TEMP*TEMP+TAUSQ)
-          SCALB=SCALA*SQRTDN
-          for (150 int I=1; I<=NPT; ++I) {
-          ZMAT(I,JA)=SCALA*(TAU*ZMAT(I,JA)-TEMP*VLAG[I])
-  150     ZMAT(I,JB)=SCALB*(ZMAT(I,JB)-TEMPA*W[I]-TEMPB*VLAG[I])
-          if (DENOM <= ZERO) {
-              if (BETA < ZERO) {
-                  IDZ=IDZ+1
-              } else {
-                  IFLAG=1
-              }
-          }
-      }
+                int JA = 1;
+                if (BETA >= ZERO) JA = JL;
+                int JB = JL + 1 - JA;
+                double TEMP = ZMAT[KNEW, JB] / DENOM;
+                TEMPA = TEMP * BETA;
+                TEMPB = TEMP * TAU;
+                TEMP = ZMAT[KNEW, JA];
+                double SCALA = ONE / Math.Sqrt(Math.Abs(BETA) * TEMP * TEMP + TAUSQ);
+                double SCALB = SCALA * SQRTDN;
+                for (int I = 1; I <= NPT; ++I)
+                {
+                    ZMAT[I, JA] = SCALA * (TAU * ZMAT[I, JA] - TEMP * VLAG[I]);
+                    ZMAT[I, JB] = SCALB * (ZMAT[I, JB] - TEMPA * W[I] - TEMPB * VLAG[I]);
+                }
+                if (DENOM <= ZERO)
+                {
+                    if (BETA < ZERO)
+                    {
+                        IDZ = IDZ + 1;
+                    }
+                    else
+                    {
+                        IFLAG = 1;
+                    }
+                }
+            }
 //
 //     Reduce IDZ when the diagonal part of the ZMAT times Diag(DZ) times
 //       ZMAT^T factorization gains another positive element. Then exchange
 //       the first and IDZ-th columns of ZMAT.
 //
-      if (IFLAG == 1) {
-          IDZ=IDZ-1
-          for (160 int I=1; I<=NPT; ++I) {
-          TEMP=ZMAT(I,1)
-          ZMAT(I,1)=ZMAT(I,IDZ)
-  160     ZMAT(I,IDZ)=TEMP
-      }
+            if (IFLAG == 1)
+            {
+                --IDZ;
+                for (int I = 1; I <= NPT; ++I)
+                {
+                    double TEMP = ZMAT[I, 1];
+                    ZMAT[I, 1] = ZMAT[I, IDZ];
+                    ZMAT[I, IDZ] = TEMP;
+                }
+            }
 //
 //     Finally, update the matrix BMAT.
 //
-      for (170 int J=1; J<=N; ++J) {
-      JP=NPT+J
-      W(JP)=BMAT(KNEW,J)
-      TEMPA=(ALPHA*VLAG(JP)-TAU*W(JP))/DENOM
-      TEMPB=(-BETA*W(JP)-TAU*VLAG(JP))/DENOM
-      for (170 int I=1; I<=JP; ++I) {
-      BMAT[I,J]=BMAT[I,J]+TEMPA*VLAG[I]+TEMPB*W[I]
-      if (I > NPT) BMAT(JP,I-NPT)=BMAT[I,J]
-  170 }
-  180 }
+            for (int J = 1; J <= N; ++J)
+            {
+                int JP = NPT + J;
+                W[JP] = BMAT[KNEW, J];
+                TEMPA = (ALPHA * VLAG[JP] - TAU * W[JP]) / DENOM;
+                TEMPB = (-BETA * W[JP] - TAU * VLAG[JP]) / DENOM;
+                for (int I = 1; I <= JP; ++I)
+                {
+                    BMAT[I, J] = BMAT[I, J] + TEMPA * VLAG[I] + TEMPB * W[I];
+                    if (I > NPT) BMAT[JP, I - NPT] = BMAT[I, J];
+                }
+            }
+        }
 
-    #endregion
-
-} // class Lincoa
-} // namespace Cureos.Numerics
+        #endregion
+    }
+}

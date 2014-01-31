@@ -49,22 +49,12 @@ namespace Cureos.Numerics
         private static readonly string LINCOA_70 = "LINCOA has made the initial X feasible by increasing part(s) of B.";
 
         private static readonly string LINCOB_230 = "Return from LINCOA because CALFUN has been called MAXFUN times.";
-
-        private static readonly string LINCOB_250 =
-            "Return from LINCOA because rounding errors prevent reasonable changes to X.";
-
-        private static readonly string LINCOB_260 =
-            "Function number {0,6:D}    F = {1,18:E10}    The corresponding X is:" + LF + "{2}";
-
-        private static readonly string LINCOB_320 =
-            "Return from LINCOA because the denominator of the updating formula is zero.";
-
+        private static readonly string LINCOB_250 = "Return from LINCOA because rounding errors prevent reasonable changes to X.";
+        private static readonly string LINCOB_260 = "Function number {0,6:D}    F = {1,18:E10}    The corresponding X is:" + LF + "{2}";
+        private static readonly string LINCOB_320 = "Return from LINCOA because the denominator of the updating formula is zero.";
         private static readonly string LINCOB_570 = LF;
         private static readonly string LINCOB_580 = "New RHO = {0,11:E4}     Number of function values = {1,6:D}";
-
-        private static readonly string LINCOB_590 = "Least value of F = {0,23:E15}         The corresponding X is:" + LF +
-                                                    "{2}";
-
+        private static readonly string LINCOB_590 = "Least value of F = {0,23:E15}         The corresponding X is:" + LF + "{1}";
         private static readonly string LINCOB_620 = "At the return from LINCOA     Number of function values = {0,6:D}";
 
         private static readonly string PRELIM_140 = LINCOB_260;
@@ -81,7 +71,7 @@ namespace Cureos.Numerics
         private static string FORMAT<T>(string separator, string itemFormatter, IEnumerable<T> items, int start, int end)
         {
             return String.Join(separator,
-                items.Skip(start).Take(end).Select(item => String.Format("{{0," + itemFormatter + "}}", item)));
+                items.Skip(start).Take(end).Select(item => String.Format("{0," + itemFormatter + "}", item)));
         }
 
         public static Status LINCOA(CalfunDel CALFUN, int N, int NPT, int M, double[,] A, int IA, double[] B, double[] X,
@@ -232,9 +222,8 @@ namespace Cureos.Numerics
 //
 //     The above settings provide a partition of W for subroutine LINCOB.
 //
-            return LINCOB(CALFUN, N, NPT, M, AMAT, BB, X, RHOBEG, RHOEND, IPRINT, MAXFUN, XBASE, XPT, FVAL, XSAV, XOPT,
-                GOPT, HQ,
-                PQ, BMAT, ZMAT, NDIM, STEP, SP, XNEW, IACT, RESCON, QFAC, RFAC, PQW, W, logger);
+            return LINCOB(CALFUN, N, NPT, M, AMAT, BB, X, RHOBEG, RHOEND, IPRINT, MAXFUN, XBASE, XPT, FVAL, XSAV,
+                XOPT, GOPT, HQ, PQ, BMAT, ZMAT, NDIM, STEP, SP, XNEW, IACT, RESCON, QFAC, RFAC, PQW, W, logger);
         }
 
         private static Status LINCOB(CalfunDel CALFUN, int N, int NPT, int M, double[,] AMAT, double[] B, double[] X,
@@ -441,7 +430,9 @@ namespace Cureos.Numerics
 //       except that SNORM is zero on return if the projected gradient is
 //       unsuitable for starting the conjugate gradient iterations.
 //
-            double SNORM;
+            double F = ZERO;
+            double VQUAD = ZERO;
+            double SNORM = ZERO;
             double DELSAV = DELTA;
             int KSAVE = KNEW;
             if (KNEW == 0)
@@ -449,9 +440,7 @@ namespace Cureos.Numerics
                 SNORM = DELTA;
                 for (int I = 1; I <= N; ++I)
                     XNEW[I] = GOPT[I];
-                TRSTEP(N, NPT, M, AMAT, B, XPT, HQ, PQ, NACT, IACT, RESCON, QFAC, RFAC, SNORM, STEP, XNEW, W, W(M + 1),
-                    PQW,
-                    PQW(NP), W(M + NP));
+                TRSTEP(N, NPT, M, AMAT, B, XPT, HQ, PQ, ref NACT, IACT, RESCON, QFAC, RFAC, SNORM, STEP, XNEW);
 //
 //     A trust region step is applied whenever its length, namely SNORM, is at
 //       least HALF*DELTA. It is also applied if its length is at least 0.1999
@@ -498,8 +487,7 @@ namespace Cureos.Numerics
                     for (int K = 1; K <= NPT; K++)
                         PQW[K] += TEMP * ZMAT[K, J];
                 }
-                QMSTEP(N, NPT, M, AMAT, B, XPT, XOPT, NACT, IACT, RESCON, QFAC, KOPT, KNEW, DEL, STEP, W, PQW, W(NP),
-                    W(NP + M), ref IFEAS);
+                QMSTEP(N, NPT, M, AMAT, B, XPT, XOPT, NACT, IACT, RESCON, QFAC, KOPT, KNEW, DEL, STEP, W, PQW, ref IFEAS);
             }
 //
 //     Set VQUAD to the change to the quadratic model when the move STEP is
@@ -507,7 +495,6 @@ namespace Cureos.Numerics
 //       negative. If it is nonnegative due to rounding errors in this case,
 //       there is a branch to label 530 to try to improve the model.
 //
-            double VQUAD = ZERO;
             for (int IH = 0, J = 1; J <= N; ++J)
             {
                 VQUAD = VQUAD + STEP[J] * GOPT[J];
@@ -562,7 +549,7 @@ namespace Cureos.Numerics
                 goto LINCOB_600;
             }
             if (KSAVE <= 0) IFEAS = 1;
-            double F = (double)IFEAS;
+            F = (double)IFEAS;
             CALFUN(N, X, ref F);
             if (IPRINT == 3)
                 PRINT(logger, LINCOB_260, NF, F, FORMAT("  ", "15:E6", X, 1, N));
@@ -572,7 +559,7 @@ namespace Cureos.Numerics
 //     If X is feasible, then set DFFALT to the difference between the new
 //       value of F and the value predicted by the alternative model.
 //
-            double DFFALT;
+            double DFFALT = ZERO;
             if (IFEAS == 1 && ITEST < 3)
             {
                 for (int K = 1; K <= NPT; ++K)
@@ -608,7 +595,7 @@ namespace Cureos.Numerics
 //
 //     Pick the next value of DELTA after a trust region step.
 //
-            double RATIO;
+            double RATIO = ZERO;
             if (KSAVE == 0)
             {
                 RATIO = (F - FOPT) / VQUAD;
@@ -900,10 +887,11 @@ namespace Cureos.Numerics
             return status;
         }
 
-        private static void GETACT(int N, int M, double[,] AMAT, double[] B, int NACT, int[] IACT, double[,] QFAC,
-            double[] RFAC, double SNORM, double[] RESNEW, double[] RESACT, double[] G, double[] DW, double[] VLAM,
-            double[] W)
+        private static double GETACT(int N, int M, double[,] AMAT, double[] B, ref int NACT, int[] IACT, double[,] QFAC,
+            double[] RFAC, double SNORM, double[] RESNEW, double[] RESACT, double[] G, double[] DW)
         {
+            double[] VLAM = new double[1 + N];
+            double[] W = new double[1 + N];
 //
 //     N, M, AMAT, B, NACT, IACT, QFAC and RFAC are the same as the terms
 //       with these names in SUBROUTINE LINCOB. The current values must be
@@ -928,6 +916,7 @@ namespace Cureos.Numerics
 //
 //     Set some constants and a temporary VLAM.
 //
+            double VIOLMX = ZERO;
             double TDEL = 0.2 * SNORM;
             double DDSAV = ZERO;
             for (int I = 1; I <= N; ++I)
@@ -1028,7 +1017,7 @@ namespace Cureos.Numerics
 //       due to computer rounding errors.
 //
             int L = 0;
-            double VIOLMX = ZERO;
+            VIOLMX = ZERO;
             double CTOL = ZERO;
             if (M > 0)
             {
@@ -1195,8 +1184,7 @@ namespace Cureos.Numerics
 
             GETACT_300:
 
-            W[1] = DD;
-            return;
+            return DD;
 //
 //     These instructions rearrange the active constraints so that the new
 //       value of IACT(NACT) is the old value of IACT(IC). A sequence of
@@ -1255,6 +1243,8 @@ namespace Cureos.Numerics
                     goto GETACT_60;
                 case 3:
                     goto GETACT_280;
+                default:
+                    throw new InvalidOperationException("Invalid IFLAG value");
             }
         }
 
@@ -1288,6 +1278,7 @@ namespace Cureos.Numerics
             double RECIP = ONE / RHOSQ;
             double RECIQ = Math.Sqrt(HALF) / RHOSQ;
             double TEST = 0.2 * RHOBEG;
+            KOPT = 0;
             IDZ = 1;
             const int KBASE = 1;
 //
@@ -1374,7 +1365,7 @@ namespace Cureos.Numerics
             {
                 double FEAS = ONE;
                 double BIGV = ZERO;
-                int JSAV;
+                int JSAV = 0;
                 {
                     int J = 0;
 
@@ -1484,8 +1475,10 @@ namespace Cureos.Numerics
 
         private static void QMSTEP(int N, int NPT, int M, double[,] AMAT, double[] B, double[,] XPT, double[] XOPT,
             int NACT, int[] IACT, double[] RESCON, double[,] QFAC, int KOPT, int KNEW, double DEL, double[] STEP,
-            double[] GL, double[] PQW, double[] RSTAT, double[] W, ref int IFEAS)
+            double[] GL, double[] PQW, ref int IFEAS)
         {
+            double[] RSTAT = new double[1 + M]; 
+            double[] W = new double[1 + N]; 
 //
 //     N, NPT, M, AMAT, B, XPT, XOPT, NACT, IACT, RESCON, QFAC, KOPT are the
 //       same as the terms with these names in SUBROUTINE LINCOB.
@@ -1751,9 +1744,14 @@ namespace Cureos.Numerics
         }
 
         private static void TRSTEP(int N, int NPT, int M, double[,] AMAT, double[] B, double[,] XPT, double[] HQ,
-            double[] PQ, int NACT, int[] IACT, double[] RESCON, double[,] QFAC, double[] RFAC, double SNORM,
-            double[] STEP, double[] G, double[] RESNEW, double[] RESACT, double[] D, double[] DW, double[] W)
+            double[] PQ, ref int NACT, int[] IACT, double[] RESCON, double[,] QFAC, double[] RFAC, double SNORM,
+            double[] STEP, double[] G)
         {
+            double[] RESNEW = new double[1 + M];
+            double[] RESACT = new double[1 + N];
+            double[] D = new double[1 + N];
+            double[] DW = new double[1 + N];
+            double[] W = new double[1 + Math.Max(M, 2 * N)];
 //
 //     N, NPT, M, AMAT, B, XPT, HQ, PQ, NACT, IACT, RESCON, QFAC and RFAC
 //       are the same as the terms with these names in LINCOB. If RESCON(J)
@@ -1824,8 +1822,8 @@ namespace Cureos.Numerics
             TRSTEP_40:
 
             ++NCALL;
-            GETACT(N, M, AMAT, B, NACT, IACT, QFAC, RFAC, SNORM, RESNEW, RESACT, G, DW, W,W(N+1));
-            if (W[N + 1] == ZERO) goto TRSTEP_320;
+            double DSQ = GETACT(N, M, AMAT, B, ref NACT, IACT, QFAC, RFAC, SNORM, RESNEW, RESACT, G, DW);
+            if (DSQ == ZERO) goto TRSTEP_320;
             double SCALE = 0.2 * SNORM / Math.Sqrt(W[N + 1]);
             for (int I = 1; I <= N; ++I)
                 DW[I] *= SCALE;
@@ -2242,7 +2240,7 @@ namespace Cureos.Numerics
 //     Apply the rotations that put zeros in the KNEW-th row of ZMAT.
 //
             int JL = 1;
-            double TEMPA, TEMPB;
+            double TEMPA, TEMPB = ZERO;
             if (NPTM >= 2)
             {
                 for (int J = 2; J <= NPTM; ++J)

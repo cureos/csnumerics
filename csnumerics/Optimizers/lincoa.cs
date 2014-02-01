@@ -531,7 +531,7 @@ namespace Cureos.Numerics.Optimizers
             F = (double)IFEAS;
             CALFUN(N, X, ref F);
             if (IPRINT == 3)
-                PRINT(logger, LINCOB_260, NF, F, FORMAT("  ", "15:E6", X, 1, N));
+                PRINT(logger, LINCOB_260, NF, F, FORMAT("  ", "18:E6", X, 1, N));
             if (KSAVE == -1) goto LINCOB_600;
             double DIFF = F - FOPT - VQUAD;
 //
@@ -835,7 +835,7 @@ namespace Cureos.Numerics.Optimizers
                 {
                     if (IPRINT >= 3) PRINT(logger, LINCOB_570);
                     PRINT(logger, LINCOB_580, RHO, NF);
-                    PRINT(logger, LINCOB_590, FOPT, FORMAT("  ", "15:E6", XBASE.Zip(XOPT, (xb, xo) => xb + xo), 1, N));
+                    PRINT(logger, LINCOB_590, FOPT, FORMAT("  ", "18:E6", XBASE.Zip(XOPT, (xb, xo) => xb + xo), 1, N));
                 }
                 goto LINCOB_10;
             }
@@ -856,7 +856,7 @@ namespace Cureos.Numerics.Optimizers
             if (IPRINT >= 1)
             {
                 PRINT(logger, LINCOB_620, NF);
-                PRINT(logger, LINCOB_590, F, FORMAT("  ", "15:E6", X, 1, N));
+                PRINT(logger, LINCOB_590, F, FORMAT("  ", "18:E6", X, 1, N));
             }
             W[1] = F;
             W[2] = (double)NF + HALF;
@@ -1389,7 +1389,7 @@ namespace Cureos.Numerics.Optimizers
                 CALFUN(N, X, ref F);
                 if (IPRINT == 3)
                 {
-                    PRINT(logger, PRELIM_140, NF, F, FORMAT("  ", "15:E6", X, 1, N));
+                    PRINT(logger, PRELIM_140, NF, F, FORMAT("  ", "18:E6", X, 1, N));
                 }
                 if (NF == 1)
                 {

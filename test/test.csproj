@@ -40,9 +40,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\cslincoa.csproj">
+    <ProjectReference Include="..\csnumerics\csnumerics.csproj">
       <Project>{75a1f6a6-7753-4b6c-b8fd-b1896c37038c}</Project>
-      <Name>cslincoa</Name>
+      <Name>csnumerics</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

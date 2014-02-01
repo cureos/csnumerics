@@ -1,5 +1,5 @@
 ﻿using System;
-using Cureos.Numerics;
+using Cureos.Numerics.Optimizers;
 
 namespace test
 {

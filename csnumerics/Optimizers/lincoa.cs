@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Cureos.Numerics
+namespace Cureos.Numerics.Optimizers
 {
 
     #region DELEGATES
@@ -62,17 +62,6 @@ namespace Cureos.Numerics
         #endregion
 
         #region METHODS
-
-        private static void PRINT(TextWriter logger, string format, params object[] args)
-        {
-            if (logger != null) logger.WriteLine(format, args);
-        }
-
-        private static string FORMAT<T>(string separator, string itemFormatter, IEnumerable<T> items, int start, int end)
-        {
-            return String.Join(separator,
-                items.Skip(start).Take(end).Select(item => String.Format("{0," + itemFormatter + "}", item)));
-        }
 
         public static Status LINCOA(CalfunDel CALFUN, int N, int NPT, int M, double[,] A, int IA, double[] B, double[] X,
             double RHOBEG, double RHOEND, int IPRINT, int MAXFUN, TextWriter logger)
@@ -192,48 +181,13 @@ namespace Cureos.Numerics
             {
                 if (IPRINT > 0) PRINT(logger, LINCOA_70);
             }
-//
-//     Partition the working space array, so that different parts of it can be
-//     treated separately by the subroutine that performs the main calculation.
-//
-            int IAMAT = Math.Max(M + 3 * N, Math.Max(2 * M + N, 2 * NPT)) + 1;
-            int NDIM = NPT + N;
-
-            double[] XBASE = new double[1 + N];
-            double[,] XPT = new double[1 + NPT, 1 + N];
-            double[] FVAL = new double[1 + NPT];
-            double[] XSAV = new double[1 + N];
-            double[] XOPT = new double[1 + N];
-            double[] GOPT = new double[1 + N];
-            double[] HQ = new double[1 + (N * NP) / 2];
-            double[] PQ = new double[1 + NPT];
-            double[,] BMAT = new double[1 + NDIM, 1 + N];
-            double[,] ZMAT = new double[1 + NPT, 1 + NPTM];
-            double[] STEP = new double[1 + N];
-            double[] SP = new double[1 + NPT + NPT];
-            double[] XNEW = new double[1 + N];
-            int[] IACT = new int[1 + N];
-            double[] RESCON = new double[1 + M];
-            double[,] QFAC = new double[1 + N, 1 + N];
-            double[] RFAC = new double[1 + (N * NP) / 2];
-            double[] PQW = new double[1 + NPT + N];
-            double[] W = new double[IAMAT];
-
-//
-//     The above settings provide a partition of W for subroutine LINCOB.
-//
-            return LINCOB(CALFUN, N, NPT, M, AMAT, BB, X, RHOBEG, RHOEND, IPRINT, MAXFUN, XBASE, XPT, FVAL, XSAV,
-                XOPT, GOPT, HQ, PQ, BMAT, ZMAT, NDIM, STEP, SP, XNEW, IACT, RESCON, QFAC, RFAC, PQW, W, logger);
+            return LINCOB(CALFUN, N, NPT, M, AMAT, BB, X, RHOBEG, RHOEND, IPRINT, MAXFUN, logger);
         }
 
         private static Status LINCOB(CalfunDel CALFUN, int N, int NPT, int M, double[,] AMAT, double[] B, double[] X,
-            double RHOBEG,
-            double RHOEND, int IPRINT, int MAXFUN, double[] XBASE, double[,] XPT, double[] FVAL, double[] XSAV,
-            double[] XOPT, double[] GOPT, double[] HQ, double[] PQ, double[,] BMAT, double[,] ZMAT, int NDIM,
-            double[] STEP, double[] SP, double[] XNEW, int[] IACT, double[] RESCON, double[,] QFAC, double[] RFAC,
-            double[] PQW, double[] W, TextWriter logger)
+            double RHOBEG, double RHOEND, int IPRINT, int MAXFUN, TextWriter logger)
         {
-            Status status = Status.InProgress;
+            Status? status = null;
 //
 //     The arguments N, NPT, M, X, RHOBEG, RHOEND, IPRINT and MAXFUN are
 //       identical to the corresponding arguments in SUBROUTINE LINCOA.
@@ -292,6 +246,31 @@ namespace Cureos.Numerics
             int NP = N + 1;
             int NH = (N * NP) / 2;
             int NPTM = NPT - NP;
+            int IAMAT = Math.Max(M + 3 * N, Math.Max(2 * M + N, 2 * NPT)) + 1;
+            int NDIM = NPT + N;
+//
+//     Partition the working space array, so that different parts of it can be
+//     treated separately by the subroutine that performs the main calculation.
+//
+            double[] XBASE = new double[1 + N];
+            double[,] XPT = new double[1 + NPT, 1 + N];
+            double[] FVAL = new double[1 + NPT];
+            double[] XSAV = new double[1 + N];
+            double[] XOPT = new double[1 + N];
+            double[] GOPT = new double[1 + N];
+            double[] HQ = new double[1 + (N * NP) / 2];
+            double[] PQ = new double[1 + NPT];
+            double[,] BMAT = new double[1 + NDIM, 1 + N];
+            double[,] ZMAT = new double[1 + NPT, 1 + NPTM];
+            double[] STEP = new double[1 + N];
+            double[] SP = new double[1 + NPT + NPT];
+            double[] XNEW = new double[1 + N];
+            int[] IACT = new int[1 + N];
+            double[] RESCON = new double[1 + M];
+            double[,] QFAC = new double[1 + N, 1 + N];
+            double[] RFAC = new double[1 + (N * NP) / 2];
+            double[] PQW = new double[1 + NPT + N];
+            double[] W = new double[IAMAT];
 //
 //     Set the elements of XBASE, XPT, FVAL, XSAV, XOPT, GOPT, HQ, PQ, BMAT,
 //       ZMAT and SP for the first iteration. An important feature is that,
@@ -866,8 +845,6 @@ namespace Cureos.Numerics
 //
             if (KSAVE == -1) goto LINCOB_220;
 
-            status = Status.Success;
-
             LINCOB_600:
 
             if (FOPT <= F || IFEAS == 0)
@@ -884,7 +861,7 @@ namespace Cureos.Numerics
             W[1] = F;
             W[2] = (double)NF + HALF;
 
-            return status;
+            return status.GetValueOrDefault(Status.Success);
         }
 
         private static double GETACT(int N, int M, double[,] AMAT, double[] B, ref int NACT, int[] IACT, double[,] QFAC,
@@ -1537,7 +1514,6 @@ namespace Cureos.Numerics
 //     Find the greatest modulus of LFUNC on a line through XOPT and
 //       another interpolation point within the trust region.
 //
-            int IFLAG = 0;
             int KSAV = 0;
             double STPSAV = ZERO;
             double VBIG = ZERO;
@@ -2372,6 +2348,17 @@ namespace Cureos.Numerics
                     if (I > NPT) BMAT[JP, I - NPT] = BMAT[I, J];
                 }
             }
+        }
+
+        private static void PRINT(TextWriter logger, string format, params object[] args)
+        {
+            if (logger != null) logger.WriteLine(format, args);
+        }
+
+        private static string FORMAT<T>(string separator, string itemFormatter, IEnumerable<T> items, int start, int end)
+        {
+            return String.Join(separator,
+                items.Skip(start).Take(end).Select(item => String.Format("{0," + itemFormatter + "}", item)));
         }
 
         #endregion

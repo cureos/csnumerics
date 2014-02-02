@@ -18,7 +18,6 @@ namespace Cureos.Numerics.Optimizers
 
         public enum Status
         {
-            InProgress,
             Success,
             N_TooSmall,
             NPT_OutOfRange,
@@ -281,8 +280,7 @@ namespace Cureos.Numerics.Optimizers
 //
             int KOPT, IDZ;
             PRELIM(CALFUN, N, NPT, M, AMAT, B, X, RHOBEG, IPRINT, XBASE, XPT, FVAL, XSAV, XOPT, GOPT, out KOPT, HQ, PQ,
-                BMAT,
-                ZMAT, out IDZ, NDIM, SP, RESCON, STEP, PQW, W, logger);
+                BMAT, ZMAT, out IDZ, NDIM, SP, RESCON, logger);
 //
 //     Begin the iterative procedure.
 //
@@ -599,7 +597,7 @@ namespace Cureos.Numerics.Optimizers
 //       can be moved. If STEP is a trust region step, then KNEW is zero at
 //       present, but a positive value is picked by subroutine UPDATE.
 //
-            UPDATE(N, NPT, XPT, BMAT, ZMAT, IDZ, NDIM, SP, STEP, KOPT, ref KNEW, PQW, W);
+            UPDATE(N, NPT, XPT, BMAT, ZMAT, IDZ, NDIM, SP, STEP, KOPT, ref KNEW);
             if (KNEW == 0)
             {
                 if (IPRINT > 0) PRINT(logger, LINCOB_320);
@@ -1228,8 +1226,11 @@ namespace Cureos.Numerics.Optimizers
         private static void PRELIM(CalfunDel CALFUN, int N, int NPT, int M, double[,] AMAT, double[] B, double[] X,
             double RHOBEG, int IPRINT, double[] XBASE, double[,] XPT, double[] FVAL, double[] XSAV, double[] XOPT,
             double[] GOPT, out int KOPT, double[] HQ, double[] PQ, double[,] BMAT, double[,] ZMAT, out int IDZ, int NDIM,
-            double[] SP, double[] RESCON, double[] STEP, double[] PQW, double[] W, TextWriter logger)
+            double[] SP, double[] RESCON, TextWriter logger)
         {
+            double[] STEP = new double[1 + N];
+            double[] PQW = new double[1 + NPT + N];
+            double[] W = new double[1 + NPT + N];
 //
 //     The arguments N, NPT, M, AMAT, B, X, RHOBEG, IPRINT, XBASE, XPT, FVAL,
 //       XSAV, XOPT, GOPT, HQ, PQ, BMAT, ZMAT, NDIM, SP and RESCON are the
@@ -1375,7 +1376,7 @@ namespace Cureos.Numerics.Optimizers
                         for (int J = 1; J <= N; ++J)
                             SP[NPT + K] += XPT[K, J] * STEP[J];
                     }
-                    UPDATE(N, NPT, XPT, BMAT, ZMAT, IDZ, NDIM, SP, STEP, KBASE, ref NF, PQW, W);
+                    UPDATE(N, NPT, XPT, BMAT, ZMAT, IDZ, NDIM, SP, STEP, KBASE, ref NF);
                     for (int I = 1; I <= N; ++I)
                         XPT[NF, I] = STEP[I];
                 }
@@ -2106,8 +2107,10 @@ namespace Cureos.Numerics.Optimizers
         }
 
         private static void UPDATE(int N, int NPT, double[,] XPT, double[,] BMAT, double[,] ZMAT, int IDZ, int NDIM,
-            double[] SP, double[] STEP, int KOPT, ref int KNEW, double[] VLAG, double[] W)
+            double[] SP, double[] STEP, int KOPT, ref int KNEW)
         {
+            double[] VLAG = new double[1 + NPT + N];
+            double[] W = new double[1 + NPT + N];
 //
 //     The arguments N, NPT, XPT, BMAT, ZMAT, IDZ, NDIM ,SP and STEP are
 //       identical to the corresponding arguments in SUBROUTINE LINCOB.

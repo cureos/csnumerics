@@ -1,4 +1,25 @@
-﻿using System;
+﻿/*
+ *  Copyright (c) 2012-2014, Cureos AB.
+ *  All rights reserved.
+ *  http://www.cureos.com
+ *
+ *	This file is part of CSNumerics.
+ *
+ *  CSNumerics is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  CSNumerics is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with CSNumerics.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+using System;
 using Cureos.Numerics.Optimizers;
 using NUnit.Framework;
 
@@ -18,7 +39,7 @@ namespace Cureos.Numerics
         [TestCase(15)]
         [TestCase(30)]
         [TestCase(45)]
-        public void FindMinimum_PowellsProblem_YieldsExpectedValue(int npt)
+        public void FindMinimum_PtsinTet_YieldsExpectedValue(int npt)
         {
             //     Set some constants.
             const int n = 12;
@@ -109,7 +130,7 @@ namespace Cureos.Numerics
             Assert.AreEqual(expected, actual, 0.001);
         }
 
-        public double PowellsProblem(int n, double[] x, bool isXFeasible)
+        public double PtsinTet(int n, double[] x, bool isXFeasible)
         {
             var v12 = x[0] * x[4] - x[3] * x[1];
             var v13 = x[0] * x[7] - x[6] * x[1];

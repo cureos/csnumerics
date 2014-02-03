@@ -1,6 +1,6 @@
 # CSNumerics
 
-<b>Portable numerics library written in C#</b>
+<b>Portable numerical algorithms in C#</b>
 
 Copyright (c) 2012-1014 Anders Gustafsson, Cureos AB. Licensed under the General Public License version 3.<br />
 

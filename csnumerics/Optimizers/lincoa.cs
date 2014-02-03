@@ -8,7 +8,7 @@ namespace Cureos.Numerics.Optimizers
 
     #region DELEGATES
 
-    public delegate void CalfunDel(int n, double[] x, ref double f);
+    internal delegate void LincoaCalfunDelegate(int n, double[] x, ref double f);
 
     #endregion
 
@@ -19,7 +19,7 @@ namespace Cureos.Numerics.Optimizers
 // ReSharper disable InconsistentNaming
         public enum Status
         {
-            Success,
+            Normal,
             N_TooSmall,
             NPT_OutOfRange,
             MAXFUN_NotLargerThan_NPT,
@@ -27,6 +27,62 @@ namespace Cureos.Numerics.Optimizers
             MAXFUN_Reached,
             X_RoundingErrorsPreventUpdate,
             UpdatingFormulaDenominatorZero
+        }
+
+        public class Result
+        {
+            #region CONSTRUCTORS
+
+            public Result(Status status, int nf, double f, double[] x)
+            {
+                Status = status;
+                Evals = nf;
+                F = f;
+                X = x;
+            }
+
+            #endregion
+
+            #region PROPERTIES
+
+            public Status Status { get; private set; }
+
+            public int Evals { get; private set; }
+
+            public double F { get; private set; }
+
+            public double[] X { get; private set; }
+
+            #endregion
+        }
+
+        private class LincoaCalfunAdapter
+        {
+            #region FIELDS
+
+            private readonly Func<int, double[], bool, double> _objective;
+
+            #endregion
+
+            #region CONSTRUCTORS
+
+            internal LincoaCalfunAdapter(Func<int, double[], bool, double> objective)
+            {
+                _objective = objective;
+            }
+
+            #endregion
+
+            #region METHODS
+
+            internal void CALFUN(int n, double[] xx, ref double f)
+            {
+                var x = new double[n];
+                Array.Copy(xx, 1, x, 0, n);
+                f = _objective(n, x, f > 0.0);
+            }
+
+            #endregion
         }
 
         #endregion
@@ -60,14 +116,43 @@ namespace Cureos.Numerics.Optimizers
 
         private static readonly string PRELIM_140 = LINCOB_260;
 // ReSharper restore ConvertToConstant.Local
+
         #endregion
 
         #region METHODS
 
-// ReSharper disable SuggestUseVarKeywordEvident
-        public static Status LINCOA(CalfunDel calfun, int n, int npt, int m, double[,] a, int ia, double[] b, double[] x,
-            double rhobeg, double rhoend, int iprint, int maxfun, TextWriter logger)
+        public static Result FindMinimum(Func<int, double[], bool, double> objective, int n, int npt, int m,
+            double[,] a, double[] b, double[] x, double rhobeg = 1.0, double rhoend = 1.0e-6, int iprint = 1,
+            int maxfun = 10000, TextWriter logger = null)
         {
+            var xx = new double[1 + n];
+            Array.Copy(x, 0, xx, 1, n);
+
+            var aa = new double[1 + n, 1 + m];
+            for (var j = 0; j < m; ++j)
+                for (var i = 0; i < n; ++i)
+                    aa[1 + i, 1 + j] = a[j, i];
+
+            var bb = new double[1 + m];
+            Array.Copy(b, 0, bb, 1, m);
+
+            double f;
+            int nf;
+            var calfun = new LincoaCalfunDelegate(new LincoaCalfunAdapter(objective).CALFUN);
+            var status = LINCOA(calfun, n, npt, m, aa, bb, xx, rhobeg, rhoend, iprint, maxfun, out f, out nf, logger);
+
+            var xopt = new double[n];
+            Array.Copy(xx, 1, xopt, 0, n);
+
+            return new Result(status, nf, f, xopt);
+        }
+
+// ReSharper disable SuggestUseVarKeywordEvident
+        private static Status LINCOA(LincoaCalfunDelegate calfun, int n, int npt, int m, double[,] a, double[] b,
+            double[] x, double rhobeg, double rhoend, int iprint, int maxfun, out double f, out int nf, TextWriter logger)
+        {
+            f = Double.MaxValue;
+            nf = 0;
 //
 //     This subroutine seeks the least value of a function of many variables,
 //       subject to general linear inequality constraints, by a trust region
@@ -182,11 +267,11 @@ namespace Cureos.Numerics.Optimizers
             {
                 if (iprint > 0) PRINT(logger, LINCOA_70);
             }
-            return LINCOB(calfun, n, npt, m, amat, bnorm, x, rhobeg, rhoend, iprint, maxfun, logger);
+            return LINCOB(calfun, n, npt, m, amat, bnorm, x, rhobeg, rhoend, iprint, maxfun, out f, out nf, logger);
         }
 
-        private static Status LINCOB(CalfunDel calfun, int n, int npt, int m, double[,] amat, double[] b, double[] x,
-            double rhobeg, double rhoend, int iprint, int maxfun, TextWriter logger)
+        private static Status LINCOB(LincoaCalfunDelegate calfun, int n, int npt, int m, double[,] amat, double[] b,
+            double[] x, double rhobeg, double rhoend, int iprint, int maxfun, out double f, out int nf, TextWriter logger)
         {
             Status? status = null;
 //
@@ -286,7 +371,7 @@ namespace Cureos.Numerics.Optimizers
 //
 //     Begin the iterative procedure.
 //
-            int nf = npt;
+            nf = npt;
             double fopt = fval[1 + kopt];
             double rho = rhobeg;
             double delta = rho;
@@ -409,7 +494,7 @@ namespace Cureos.Numerics.Optimizers
 //       except that SNORM is zero on return if the projected gradient is
 //       unsuitable for starting the conjugate gradient iterations.
 //
-            double f = ZERO;
+            f = ZERO;
             double vquad = ZERO;
             double snorm = ZERO;
             double delsav = delta;
@@ -531,7 +616,7 @@ namespace Cureos.Numerics.Optimizers
             f = ifeas;
             calfun(n, x, ref f);
             if (iprint == 3)
-                PRINT(logger, LINCOB_260, nf, f, FORMAT("  ", "18:E6", x, 1, n));
+                PRINT(logger, LINCOB_260, nf, f, FORMAT("  ", "15:E6", x, 1, n));
             if (ksave == -1) goto LINCOB_600;
             double diff = f - fopt - vquad;
 //
@@ -634,8 +719,8 @@ namespace Cureos.Numerics.Optimizers
                     if (temp != ZERO)
                     {
                         if (j < idz) temp = -temp;
-                        for ( /*340*/ int K = 1; K <= npt; ++K)
-                            pqw[K] += temp * zmat[K, j];
+                        for (int k = 1; k <= npt; ++k)
+                            pqw[k] += temp * zmat[k, j];
                     }
                 }
                 for (int ih = 0, i = 1; i <= n; ++i)
@@ -835,7 +920,7 @@ namespace Cureos.Numerics.Optimizers
                 {
                     if (iprint >= 3) PRINT(logger, LINCOB_570);
                     PRINT(logger, LINCOB_580, rho, nf);
-                    PRINT(logger, LINCOB_590, fopt, FORMAT("  ", "18:E6", xbase.Zip(xopt, (xb, xo) => xb + xo), 1, n));
+                    PRINT(logger, LINCOB_590, fopt, FORMAT("  ", "15:E6", xbase.Zip(xopt, (xb, xo) => xb + xo), 1, n));
                 }
                 goto LINCOB_10;
             }
@@ -856,12 +941,10 @@ namespace Cureos.Numerics.Optimizers
             if (iprint >= 1)
             {
                 PRINT(logger, LINCOB_620, nf);
-                PRINT(logger, LINCOB_590, f, FORMAT("  ", "18:E6", x, 1, n));
+                PRINT(logger, LINCOB_590, f, FORMAT("  ", "15:E6", x, 1, n));
             }
-            w[1] = f;
-            w[2] = nf + HALF;
 
-            return status.GetValueOrDefault(Status.Success);
+            return status.GetValueOrDefault(Status.Normal);
         }
 
         private static double GETACT(int n, int m, double[,] amat, ref int nact, int[] iact, double[,] qfac,
@@ -1225,7 +1308,7 @@ namespace Cureos.Numerics.Optimizers
             }
         }
 
-        private static void PRELIM(CalfunDel calfun, int n, int npt, int m, double[,] amat, double[] b, double[] x,
+        private static void PRELIM(LincoaCalfunDelegate calfun, int n, int npt, int m, double[,] amat, double[] b, double[] x,
             double rhobeg, int iprint, double[] xbase, double[,] xpt, double[] fval, double[] xsav, double[] xopt,
             double[] gopt, out int kopt, double[] hq, double[] pq, double[,] bmat, double[,] zmat, out int idz, int ndim,
             double[] sp, double[] rescon, TextWriter logger)
@@ -1391,7 +1474,7 @@ namespace Cureos.Numerics.Optimizers
                 calfun(n, x, ref f);
                 if (iprint == 3)
                 {
-                    PRINT(logger, PRELIM_140, nf, f, FORMAT("  ", "18:E6", x, 1, n));
+                    PRINT(logger, PRELIM_140, nf, f, FORMAT("  ", "15:E6", x, 1, n));
                 }
                 if (nf == 1)
                 {

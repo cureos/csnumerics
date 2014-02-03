@@ -1,0 +1,134 @@
+﻿using System;
+using Cureos.Numerics.Optimizers;
+using NUnit.Framework;
+
+namespace Cureos.Numerics
+{
+    [TestFixture]
+    public class LincoaTests
+    {
+        #region FIELDS
+
+        private double _fmax;
+
+        #endregion
+
+        #region Unit tests
+
+        [TestCase(15)]
+        [TestCase(30)]
+        [TestCase(45)]
+        public void FindMinimum_PowellsProblem_YieldsExpectedValue(int npt)
+        {
+            //     Set some constants.
+            const int n = 12;
+
+            //     Set the data points.
+            const int np = 50;
+            var sumx = 0.0;
+            var sumy = 0.0;
+            var sumz = 0.0;
+
+            var xp = new double[50];
+            var yp = new double[50];
+            var zp = new double[50];
+            for (var j = 0; j < np; ++j)
+            {
+                var theta = j * Math.PI / (np - 1.0);
+                xp[j] = Math.Cos(theta) * Math.Cos(2.0 * theta);
+                sumx += xp[j];
+                yp[j] = Math.Sin(theta) * Math.Cos(2.0 * theta);
+                sumy += yp[j];
+                zp[j] = Math.Sin(2.0 * theta);
+                sumz += zp[j];
+            }
+            sumx /= np;
+            sumy /= np;
+            sumz /= np;
+            for (var j = 0; j < np; ++j)
+            {
+                xp[j] -= sumx;
+                yp[j] -= sumy;
+                zp[j] -= sumz;
+            }
+
+            //     Set the linear constraints.
+            const int m = 4 * np;
+            var a = new double[m, n];
+            var b = new double[m];
+            for (var k = 0; k < m; ++k)
+            {
+                b[k] = 1.0;
+                for (var i = 0; i < n; ++i)
+                    a[k, i] = 0.0;
+            }
+            for (var j = 0; j < np; ++j)
+            {
+                for (var i = 0; i < 4; ++i)
+                {
+                    var k = 4 * j + i;
+                    var iw = 3 * i;
+                    a[k, iw] = xp[j];
+                    a[k, iw + 1] = yp[j];
+                    a[k, iw + 2] = zp[j];
+                }
+            }
+
+            //     Set the initial vector of variables. 
+            var xs = 0.0;
+            var ys = 0.0;
+            var zs = 0.0;
+            var ss = 0.0;
+            for (var j = 0; j < np; ++j)
+            {
+                xs = Math.Min(xs, xp[j]);
+                ys = Math.Min(ys, yp[j]);
+                zs = Math.Min(zs, zp[j]);
+                ss = Math.Max(ss, xp[j] + yp[j] + zp[j]);
+            }
+
+            var x = new double[12];
+            x[0] = 1.0 / xs;
+            x[4] = 1.0 / ys;
+            x[8] = 1.0 / zs;
+            x[9] = 1.0 / ss;
+            x[10] = 1.0 / ss;
+            x[11] = 1.0 / ss;
+
+            _fmax = Math.Pow(ss - xs - ys - zs, 3.0) / 6.0;
+
+            //     Call of LINCOA, which provides the printing given at the end of this note.
+            const double rhobeg = 1.0;
+            const double rhoend = 1.0E-6;
+            const int iprint = 1;
+            const int maxfun = 10000;
+            var result = Lincoa.FindMinimum(PowellsProblem, n, npt, m, a, b, x, rhobeg, rhoend, iprint, maxfun, Console.Out);
+
+            const double expected = 2.761;
+            var actual = result.F;
+            Assert.AreEqual(expected, actual, 0.001);
+        }
+
+        public double PowellsProblem(int n, double[] x, bool isXFeasible)
+        {
+            var v12 = x[0] * x[4] - x[3] * x[1];
+            var v13 = x[0] * x[7] - x[6] * x[1];
+            var v14 = x[0] * x[10] - x[9] * x[1];
+            var v23 = x[3] * x[7] - x[6] * x[4];
+            var v24 = x[3] * x[10] - x[9] * x[4];
+            var v34 = x[6] * x[10] - x[9] * x[7];
+            var del1 = v23 * x[11] - v24 * x[8] + v34 * x[5];
+            if (del1 <= 0.0) return _fmax;
+            var del2 = -v34 * x[2] - v13 * x[11] + v14 * x[8];
+            if (del2 <= 0.0) return _fmax;
+            var del3 = -v14 * x[5] + v24 * x[2] + v12 * x[11];
+            if (del3 <= 0.0) return _fmax;
+            var del4 = -v12 * x[8] + v13 * x[5] - v23 * x[2];
+            if (del4 <= 0.0) return _fmax;
+            var temp = Math.Pow(del1 + del2 + del3 + del4, 3.0) / (del1 * del2 * del3 * del4);
+            return Math.Min(temp / 6.0, _fmax);
+        }
+
+        #endregion
+    }
+}

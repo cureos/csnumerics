@@ -16,6 +16,7 @@ namespace Cureos.Numerics.Optimizers
     {
         #region INNER TYPES
 
+// ReSharper disable InconsistentNaming
         public enum Status
         {
             Success,
@@ -41,6 +42,7 @@ namespace Cureos.Numerics.Optimizers
 
         private static readonly string LF = Environment.NewLine;
 
+// ReSharper disable ConvertToConstant.Local
         private static readonly string LINCOA_10 = "Return from LINCOA because N is less than 2.";
         private static readonly string LINCOA_20 = "Return from LINCOA because NPT is not in the required interval.";
         private static readonly string LINCOA_30 = "Return from LINCOA because MAXFUN is less than NPT+1.";
@@ -57,11 +59,13 @@ namespace Cureos.Numerics.Optimizers
         private static readonly string LINCOB_620 = "At the return from LINCOA     Number of function values = {0,6:D}";
 
         private static readonly string PRELIM_140 = LINCOB_260;
+// ReSharper restore ConvertToConstant.Local InconsistentNaming
 
         #endregion
 
         #region METHODS
 
+// ReSharper disable SuggestUseVarKeywordEvident
         public static Status LINCOA(CalfunDel CALFUN, int N, int NPT, int M, double[,] A, int IA, double[] B, double[] X,
             double RHOBEG, double RHOEND, int IPRINT, int MAXFUN, TextWriter logger)
         {
@@ -127,7 +131,6 @@ namespace Cureos.Numerics.Optimizers
 //
             double SMALLX = 1.0E-6 * RHOEND;
             int NP = N + 1;
-            int NPTM = NPT - NP;
             if (N <= 1)
             {
                 PRINT(logger, LINCOA_10);
@@ -417,7 +420,7 @@ namespace Cureos.Numerics.Optimizers
                 SNORM = DELTA;
                 for (int I = 1; I <= N; ++I)
                     XNEW[I] = GOPT[I];
-                TRSTEP(N, NPT, M, AMAT, B, XPT, HQ, PQ, ref NACT, IACT, RESCON, QFAC, RFAC, ref SNORM, STEP, XNEW);
+                TRSTEP(N, NPT, M, AMAT, XPT, HQ, PQ, ref NACT, IACT, RESCON, QFAC, RFAC, ref SNORM, STEP, XNEW);
 //
 //     A trust region step is applied whenever its length, namely SNORM, is at
 //       least HALF*DELTA. It is also applied if its length is at least 0.1999
@@ -464,7 +467,7 @@ namespace Cureos.Numerics.Optimizers
                     for (int K = 1; K <= NPT; K++)
                         PQW[K] += TEMP * ZMAT[K, J];
                 }
-                QMSTEP(N, NPT, M, AMAT, B, XPT, XOPT, NACT, IACT, RESCON, QFAC, KOPT, KNEW, DEL, STEP, W, PQW, ref IFEAS);
+                QMSTEP(N, NPT, M, AMAT, XPT, XOPT, NACT, IACT, RESCON, QFAC, KOPT, KNEW, DEL, STEP, W, PQW, out IFEAS);
             }
 //
 //     Set VQUAD to the change to the quadratic model when the move STEP is
@@ -526,7 +529,7 @@ namespace Cureos.Numerics.Optimizers
                 goto LINCOB_600;
             }
             if (KSAVE <= 0) IFEAS = 1;
-            F = (double)IFEAS;
+            F = IFEAS;
             CALFUN(N, X, ref F);
             if (IPRINT == 3)
                 PRINT(logger, LINCOB_260, NF, F, FORMAT("  ", "18:E6", X, 1, N));
@@ -597,7 +600,7 @@ namespace Cureos.Numerics.Optimizers
 //       can be moved. If STEP is a trust region step, then KNEW is zero at
 //       present, but a positive value is picked by subroutine UPDATE.
 //
-            UPDATE(N, NPT, XPT, BMAT, ZMAT, IDZ, NDIM, SP, STEP, KOPT, ref KNEW);
+            UPDATE(N, NPT, XPT, BMAT, ZMAT, IDZ, SP, STEP, KOPT, ref KNEW);
             if (KNEW == 0)
             {
                 if (IPRINT > 0) PRINT(logger, LINCOB_320);
@@ -857,12 +860,12 @@ namespace Cureos.Numerics.Optimizers
                 PRINT(logger, LINCOB_590, F, FORMAT("  ", "18:E6", X, 1, N));
             }
             W[1] = F;
-            W[2] = (double)NF + HALF;
+            W[2] = NF + HALF;
 
             return status.GetValueOrDefault(Status.Success);
         }
 
-        private static double GETACT(int N, int M, double[,] AMAT, double[] B, ref int NACT, int[] IACT, double[,] QFAC,
+        private static double GETACT(int N, int M, double[,] AMAT, ref int NACT, int[] IACT, double[,] QFAC,
             double[] RFAC, double SNORM, double[] RESNEW, double[] RESACT, double[] G, double[] DW)
         {
             double[] VLAM = new double[1 + N];
@@ -1229,7 +1232,6 @@ namespace Cureos.Numerics.Optimizers
             double[] SP, double[] RESCON, TextWriter logger)
         {
             double[] STEP = new double[1 + N];
-            double[] PQW = new double[1 + NPT + N];
             double[] W = new double[1 + NPT + N];
 //
 //     The arguments N, NPT, M, AMAT, B, X, RHOBEG, IPRINT, XBASE, XPT, FVAL,
@@ -1376,7 +1378,7 @@ namespace Cureos.Numerics.Optimizers
                         for (int J = 1; J <= N; ++J)
                             SP[NPT + K] += XPT[K, J] * STEP[J];
                     }
-                    UPDATE(N, NPT, XPT, BMAT, ZMAT, IDZ, NDIM, SP, STEP, KBASE, ref NF);
+                    UPDATE(N, NPT, XPT, BMAT, ZMAT, IDZ, SP, STEP, KBASE, ref NF);
                     for (int I = 1; I <= N; ++I)
                         XPT[NF, I] = STEP[I];
                 }
@@ -1451,12 +1453,12 @@ namespace Cureos.Numerics.Optimizers
             }
         }
 
-        private static void QMSTEP(int N, int NPT, int M, double[,] AMAT, double[] B, double[,] XPT, double[] XOPT,
-            int NACT, int[] IACT, double[] RESCON, double[,] QFAC, int KOPT, int KNEW, double DEL, double[] STEP,
-            double[] GL, double[] PQW, ref int IFEAS)
+        private static void QMSTEP(int N, int NPT, int M, double[,] AMAT, double[,] XPT, double[] XOPT, int NACT,
+            int[] IACT, double[] RESCON, double[,] QFAC, int KOPT, int KNEW, double DEL, double[] STEP, double[] GL,
+            double[] PQW, out int IFEAS)
         {
-            double[] RSTAT = new double[1 + M]; 
-            double[] W = new double[1 + N]; 
+            double[] RSTAT = new double[1 + M];
+            double[] W = new double[1 + N];
 //
 //     N, NPT, M, AMAT, B, XPT, XOPT, NACT, IACT, RESCON, QFAC, KOPT are the
 //       same as the terms with these names in SUBROUTINE LINCOB.
@@ -1551,14 +1553,13 @@ namespace Cureos.Numerics.Optimizers
 //     Set STEP to the move that gives the greatest modulus calculated above.
 //       This move may be replaced by a steepest ascent step from XOPT.
 //
-            double VGRAD = ZERO;
             double GG = ZERO;
             for (int I = 1; I <= N; ++I)
             {
                 GG += GL[I] * GL[I];
                 STEP[I] = STPSAV * (XPT[KSAV, I] - XOPT[I]);
             }
-            VGRAD = DEL * Math.Sqrt(GG);
+            double VGRAD = DEL * Math.Sqrt(GG);
             if (VGRAD <= TENTH * VBIG) goto QMSTEP_220;
 //
 //     Make the replacement if it provides a larger value of VBIG.
@@ -1720,7 +1721,7 @@ namespace Cureos.Numerics.Optimizers
 //
         }
 
-        private static void TRSTEP(int N, int NPT, int M, double[,] AMAT, double[] B, double[,] XPT, double[] HQ,
+        private static void TRSTEP(int N, int NPT, int M, double[,] AMAT, double[,] XPT, double[] HQ,
             double[] PQ, ref int NACT, int[] IACT, double[] RESCON, double[,] QFAC, double[] RFAC, ref double SNORM,
             double[] STEP, double[] G)
         {
@@ -1799,7 +1800,7 @@ namespace Cureos.Numerics.Optimizers
             TRSTEP_40:
 
             ++NCALL;
-            double DSQ = GETACT(N, M, AMAT, B, ref NACT, IACT, QFAC, RFAC, SNORM, RESNEW, RESACT, G, DW);
+            double DSQ = GETACT(N, M, AMAT, ref NACT, IACT, QFAC, RFAC, SNORM, RESNEW, RESACT, G, DW);
             if (DSQ == ZERO) goto TRSTEP_320;
             double SCALE = 0.2 * SNORM / Math.Sqrt(DSQ);
             for (int I = 1; I <= N; ++I)
@@ -2106,7 +2107,7 @@ namespace Cureos.Numerics.Optimizers
             if (NCALL > 1) G[1] = ONE;
         }
 
-        private static void UPDATE(int N, int NPT, double[,] XPT, double[,] BMAT, double[,] ZMAT, int IDZ, int NDIM,
+        private static void UPDATE(int N, int NPT, double[,] XPT, double[,] BMAT, double[,] ZMAT, int IDZ,
             double[] SP, double[] STEP, int KOPT, ref int KNEW)
         {
             double[] VLAG = new double[1 + NPT + N];
@@ -2361,8 +2362,10 @@ namespace Cureos.Numerics.Optimizers
         private static string FORMAT<T>(string separator, string itemFormatter, IEnumerable<T> items, int start, int end)
         {
             return String.Join(separator,
+// ReSharper disable once FormatStringProblem
                 items.Skip(start).Take(end).Select(item => String.Format("{0," + itemFormatter + "}", item)));
         }
+        // ReSharper restore SuggestUseVarKeywordEvident
 
         #endregion
     }

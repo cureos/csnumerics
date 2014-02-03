@@ -1453,12 +1453,12 @@ namespace Cureos.Numerics.Optimizers
             }
         }
 
-        private static void QMSTEP(int N, int NPT, int M, double[,] AMAT, double[,] XPT, double[] XOPT, int NACT,
-            int[] IACT, double[] RESCON, double[,] QFAC, int KOPT, int KNEW, double DEL, double[] STEP, double[] GL,
-            double[] PQW, out int IFEAS)
+        private static void QMSTEP(int n, int npt, int m, double[,] amat, double[,] xpt, double[] xopt, int nact,
+            int[] iact, double[] rescon, double[,] qfac, int kopt, int knew, double del, double[] step, double[] gl,
+            double[] pqw, out int ifeas)
         {
-            double[] RSTAT = new double[1 + M];
-            double[] W = new double[1 + N];
+            double[] rstat = new double[1 + m];
+            double[] w = new double[1 + n];
 //
 //     N, NPT, M, AMAT, B, XPT, XOPT, NACT, IACT, RESCON, QFAC, KOPT are the
 //       same as the terms with these names in SUBROUTINE LINCOB.
@@ -1489,141 +1489,141 @@ namespace Cureos.Numerics.Optimizers
 //
 //     Set some constants.
 //
-            double TEST = 0.2 * DEL;
+            double test = 0.2 * del;
 //
 //     Replace GL by the gradient of LFUNC at the trust region centre, and
 //       set the elements of RSTAT.
 //
-            for (int K = 1; K <= NPT; ++K)
+            for (int k = 1; k <= npt; ++k)
             {
-                double TEMP = ZERO;
-                for (int J = 1; J <= N; ++J)
-                    TEMP += XPT[K, J] * XOPT[J];
-                TEMP *= PQW[K];
-                for (int I = 1; I <= N; ++I)
-                    GL[I] = GL[I] + TEMP * XPT[K, I];
+                double temp = ZERO;
+                for (int j = 1; j <= n; ++j)
+                    temp += xpt[k, j] * xopt[j];
+                temp *= pqw[k];
+                for (int i = 1; i <= n; ++i)
+                    gl[i] = gl[i] + temp * xpt[k, i];
             }
-            if (M > 0)
+            if (m > 0)
             {
-                for (int J = 1; J <= M; ++J)
+                for (int j = 1; j <= m; ++j)
                 {
-                    RSTAT[J] = ONE;
-                    if (Math.Abs(RESCON[J]) >= DEL) RSTAT[J] = -ONE;
+                    rstat[j] = ONE;
+                    if (Math.Abs(rescon[j]) >= del) rstat[j] = -ONE;
                 }
-                for (int K = 1; K <= NACT; ++K)
-                    RSTAT[IACT[K]] = ZERO;
+                for (int k = 1; k <= nact; ++k)
+                    rstat[iact[k]] = ZERO;
             }
 //
 //     Find the greatest modulus of LFUNC on a line through XOPT and
 //       another interpolation point within the trust region.
 //
-            int KSAV = 0;
-            double STPSAV = ZERO;
-            double VBIG = ZERO;
-            for (int K = 1; K <= NPT; ++K)
+            int ksav = 0;
+            double stpsav = ZERO;
+            double vbig = ZERO;
+            for (int k = 1; k <= npt; ++k)
             {
-                if (K == KOPT) continue;
-                double SS = ZERO;
-                double SP = ZERO;
-                for (int I = 1; I <= N; ++I)
+                if (k == kopt) continue;
+                double ss = ZERO;
+                double sp = ZERO;
+                for (int i = 1; i <= n; ++i)
                 {
-                    double TEMP = XPT[K, I] - XOPT[I];
-                    SS += TEMP * TEMP;
-                    SP += GL[I] * TEMP;
+                    double temp = xpt[k, i] - xopt[i];
+                    ss += temp * temp;
+                    sp += gl[i] * temp;
                 }
-                double STP = -DEL / Math.Sqrt(SS);
-                double VLAG;
-                if (K == KNEW)
+                double stp = -del / Math.Sqrt(ss);
+                double vlag;
+                if (k == knew)
                 {
-                    if (SP * (SP - ONE) < ZERO) STP = -STP;
-                    VLAG = Math.Abs(STP * SP) + STP * STP * Math.Abs(SP - ONE);
+                    if (sp * (sp - ONE) < ZERO) stp = -stp;
+                    vlag = Math.Abs(stp * sp) + stp * stp * Math.Abs(sp - ONE);
                 }
                 else
                 {
-                    VLAG = Math.Abs(STP * (ONE - STP) * SP);
+                    vlag = Math.Abs(stp * (ONE - stp) * sp);
                 }
-                if (VLAG > VBIG)
+                if (vlag > vbig)
                 {
-                    KSAV = K;
-                    STPSAV = STP;
-                    VBIG = VLAG;
+                    ksav = k;
+                    stpsav = stp;
+                    vbig = vlag;
                 }
             }
 //
 //     Set STEP to the move that gives the greatest modulus calculated above.
 //       This move may be replaced by a steepest ascent step from XOPT.
 //
-            double GG = ZERO;
-            for (int I = 1; I <= N; ++I)
+            double gg = ZERO;
+            for (int i = 1; i <= n; ++i)
             {
-                GG += GL[I] * GL[I];
-                STEP[I] = STPSAV * (XPT[KSAV, I] - XOPT[I]);
+                gg += gl[i] * gl[i];
+                step[i] = stpsav * (xpt[ksav, i] - xopt[i]);
             }
-            double VGRAD = DEL * Math.Sqrt(GG);
-            if (VGRAD <= TENTH * VBIG) goto QMSTEP_220;
+            double vgrad = del * Math.Sqrt(gg);
+            if (vgrad <= TENTH * vbig) goto QMSTEP_220;
 //
 //     Make the replacement if it provides a larger value of VBIG.
 //
-            double GHG = ZERO;
-            for (int K = 1; K <= NPT; ++K)
+            double ghg = ZERO;
+            for (int k = 1; k <= npt; ++k)
             {
-                double TEMP = ZERO;
-                for (int J = 1; J <= N; ++J)
-                    TEMP += XPT[K, J] * GL[J];
-                GHG += PQW[K] * TEMP * TEMP;
+                double temp = ZERO;
+                for (int j = 1; j <= n; ++j)
+                    temp += xpt[k, j] * gl[j];
+                ghg += pqw[k] * temp * temp;
             }
-            double VNEW = VGRAD + Math.Abs(HALF * DEL * DEL * GHG / GG);
-            if (VNEW > VBIG)
+            double vnew = vgrad + Math.Abs(HALF * del * del * ghg / gg);
+            if (vnew > vbig)
             {
-                VBIG = VNEW;
-                double STP = DEL / Math.Sqrt(GG);
-                if (GHG < ZERO) STP = -STP;
-                for (int I = 1; I <= N; ++I)
-                    STEP[I] = STP * GL[I];
+                vbig = vnew;
+                double stp = del / Math.Sqrt(gg);
+                if (ghg < ZERO) stp = -stp;
+                for (int i = 1; i <= n; ++i)
+                    step[i] = stp * gl[i];
             }
-            if (NACT == 0 || NACT == N) goto QMSTEP_220;
+            if (nact == 0 || nact == n) goto QMSTEP_220;
 //
 //     Overwrite GL by its projection. Then set VNEW to the greatest
 //       value of |LFUNC| on the projected gradient from XOPT subject to
 //       the trust region bound. If VNEW is sufficiently large, then STEP
 //       may be changed to a move along the projected gradient.
 //
-            for (int K = NACT + 1; K <= N; ++K)
+            for (int k = nact + 1; k <= n; ++k)
             {
-                W[K] = ZERO;
-                for (int I = 1; I <= N; ++I)
-                    W[K] += GL[I] * QFAC[I, K];
+                w[k] = ZERO;
+                for (int i = 1; i <= n; ++i)
+                    w[k] += gl[i] * qfac[i, k];
             }
-            GG = ZERO;
-            for (int I = 1; I <= N; ++I)
+            gg = ZERO;
+            for (int i = 1; i <= n; ++i)
             {
-                GL[I] = ZERO;
-                for (int K = NACT + 1; K <= N; ++K)
-                    GL[I] += QFAC[I, K] * W[K];
-                GG += GL[I] * GL[I];
+                gl[i] = ZERO;
+                for (int k = nact + 1; k <= n; ++k)
+                    gl[i] += qfac[i, k] * w[k];
+                gg += gl[i] * gl[i];
             }
-            VGRAD = DEL * Math.Sqrt(GG);
-            if (VGRAD <= TENTH * VBIG) goto QMSTEP_220;
-            GHG = ZERO;
-            for (int K = 1; K <= NPT; ++K)
+            vgrad = del * Math.Sqrt(gg);
+            if (vgrad <= TENTH * vbig) goto QMSTEP_220;
+            ghg = ZERO;
+            for (int k = 1; k <= npt; ++k)
             {
-                double TEMP = ZERO;
-                for (int J = 1; J <= N; ++J)
-                    TEMP += XPT[K, J] * GL[J];
-                GHG += PQW[K] * TEMP * TEMP;
+                double temp = ZERO;
+                for (int j = 1; j <= n; ++j)
+                    temp += xpt[k, j] * gl[j];
+                ghg += pqw[k] * temp * temp;
             }
-            VNEW = VGRAD + Math.Abs(HALF * DEL * DEL * GHG / GG);
+            vnew = vgrad + Math.Abs(HALF * del * del * ghg / gg);
 //
 //     Set W to the possible move along the projected gradient.
 //
-            double WW = ZERO;
+            double ww = ZERO;
             {
-                double STP = DEL / Math.Sqrt(GG);
-                if (GHG < ZERO) STP = -STP;
-                for (int I = 1; I <= N; ++I)
+                double stp = del / Math.Sqrt(gg);
+                if (ghg < ZERO) stp = -stp;
+                for (int i = 1; i <= n; ++i)
                 {
-                    W[I] = STP * GL[I];
-                    WW += W[I] * W[I];
+                    w[i] = stp * gl[i];
+                    ww += w[i] * w[i];
                 }
             }
 //
@@ -1633,46 +1633,46 @@ namespace Cureos.Numerics.Optimizers
 //       of CTOL below is to provide a check on feasibility that includes
 //       a tolerance for contributions from computer rounding errors.
 //
-            if (VNEW / VBIG >= 0.2)
+            if (vnew / vbig >= 0.2)
             {
-                IFEAS = 1;
-                double BIGV = ZERO;
-                int J = 0;
+                ifeas = 1;
+                double bigv = ZERO;
+                int j = 0;
 
                 QMSTEP_170:
 
-                J = J + 1;
-                if (J <= M)
+                ++j;
+                if (j <= m)
                 {
-                    if (RSTAT[J] == ONE)
+                    if (rstat[j] == ONE)
                     {
-                        double TEMP = -RESCON[J];
-                        for (int I = 1; I <= N; ++I)
-                            TEMP += W[I] * AMAT[I, J];
-                        BIGV = Math.Max(BIGV, TEMP);
+                        double temp = -rescon[j];
+                        for (int i = 1; i <= n; ++i)
+                            temp += w[i] * amat[i, j];
+                        bigv = Math.Max(bigv, temp);
                     }
-                    if (BIGV < TEST) goto QMSTEP_170;
-                    IFEAS = 0;
+                    if (bigv < test) goto QMSTEP_170;
+                    ifeas = 0;
                 }
-                double CTOL = ZERO;
+                double ctol = ZERO;
                 {
-                    double TEMP = 0.01 * Math.Sqrt(WW);
-                    if (BIGV > ZERO && BIGV < TEMP)
+                    double temp = 0.01 * Math.Sqrt(ww);
+                    if (bigv > ZERO && bigv < temp)
                     {
-                        for (int K = 1; K <= NACT; ++K)
+                        for (int k = 1; k <= nact; ++k)
                         {
-                            J = IACT[K];
-                            double SUM = ZERO;
-                            for (int I = 1; I <= N; ++I)
-                                SUM = SUM + W[I] * AMAT[I, J];
-                            CTOL = Math.Max(CTOL, Math.Abs(SUM));
+                            j = iact[k];
+                            double sum = ZERO;
+                            for (int i = 1; i <= n; ++i)
+                                sum = sum + w[i] * amat[i, j];
+                            ctol = Math.Max(ctol, Math.Abs(sum));
                         }
                     }
                 }
-                if (BIGV <= 10.0 * CTOL || BIGV >= TEST)
+                if (bigv <= 10.0 * ctol || bigv >= test)
                 {
-                    for (int I = 1; I <= N; ++I)
-                        STEP[I] = W[I];
+                    for (int i = 1; i <= n; ++i)
+                        step[i] = w[i];
                     return;
                 }
             }
@@ -1682,38 +1682,38 @@ namespace Cureos.Numerics.Optimizers
 //
             QMSTEP_220:
 
-            IFEAS = 1;
-            int JSAV = 0;
-            double RESMAX = ZERO;
+            ifeas = 1;
+            int jsav = 0;
+            double resmax = ZERO;
             {
-                int J = 0;
-                double BIGV = ZERO;
+                int j = 0;
+                double bigv = ZERO;
 
                 QMSTEP_230:
 
-                ++J;
-                if (J <= M)
+                ++j;
+                if (j <= m)
                 {
-                    if (RSTAT[J] < ZERO) goto QMSTEP_230;
-                    double TEMP = -RESCON[J];
-                    for (int I = 1; I <= N; ++I)
-                        TEMP += STEP[I] * AMAT[I, J];
-                    RESMAX = Math.Max(RESMAX, TEMP);
-                    if (TEMP < TEST)
+                    if (rstat[j] < ZERO) goto QMSTEP_230;
+                    double temp = -rescon[j];
+                    for (int i = 1; i <= n; ++i)
+                        temp += step[i] * amat[i, j];
+                    resmax = Math.Max(resmax, temp);
+                    if (temp < test)
                     {
-                        if (TEMP <= BIGV) goto QMSTEP_230;
-                        BIGV = TEMP;
-                        JSAV = J;
-                        IFEAS = -1;
+                        if (temp <= bigv) goto QMSTEP_230;
+                        bigv = temp;
+                        jsav = j;
+                        ifeas = -1;
                         goto QMSTEP_230;
                     }
-                    IFEAS = 0;
+                    ifeas = 0;
                 }
-                if (IFEAS == -1)
+                if (ifeas == -1)
                 {
-                    for (int I = 1; I <= N; ++I)
-                        STEP[I] += (TEST - BIGV) * AMAT[I, JSAV];
-                    IFEAS = 0;
+                    for (int i = 1; i <= n; ++i)
+                        step[i] += (test - bigv) * amat[i, jsav];
+                    ifeas = 0;
                 }
             }
 //
@@ -1721,15 +1721,15 @@ namespace Cureos.Numerics.Optimizers
 //
         }
 
-        private static void TRSTEP(int N, int NPT, int M, double[,] AMAT, double[,] XPT, double[] HQ,
-            double[] PQ, ref int NACT, int[] IACT, double[] RESCON, double[,] QFAC, double[] RFAC, ref double SNORM,
-            double[] STEP, double[] G)
+        private static void TRSTEP(int n, int npt, int m, double[,] amat, double[,] xpt, double[] hq,
+            double[] pq, ref int nact, int[] iact, double[] rescon, double[,] qfac, double[] rfac, ref double snorm,
+            double[] step, double[] g)
         {
-            double[] RESNEW = new double[1 + M];
-            double[] RESACT = new double[1 + N];
-            double[] D = new double[1 + N];
-            double[] DW = new double[1 + N];
-            double[] W = new double[1 + Math.Max(M, 2 * N)];
+            double[] resnew = new double[1 + m];
+            double[] resact = new double[1 + n];
+            double[] d = new double[1 + n];
+            double[] dw = new double[1 + n];
+            double[] w = new double[1 + Math.Max(m, 2 * n)];
 //
 //     N, NPT, M, AMAT, B, XPT, HQ, PQ, NACT, IACT, RESCON, QFAC and RFAC
 //       are the same as the terms with these names in LINCOB. If RESCON(J)
@@ -1759,38 +1759,38 @@ namespace Cureos.Numerics.Optimizers
 //
 //     Set some numbers for the conjugate gradient iterations.
 //
-            double SNSQ = SNORM * SNORM;
+            double snsq = snorm * snorm;
 //
 //     Set the initial elements of RESNEW, RESACT and STEP.
 //
-            if (M > 0)
+            if (m > 0)
             {
-                for (int J = 1; J <= M; ++J)
+                for (int j = 1; j <= m; ++j)
                 {
-                    RESNEW[J] = RESCON[J];
-                    if (RESCON[J] >= SNORM)
+                    resnew[j] = rescon[j];
+                    if (rescon[j] >= snorm)
                     {
-                        RESNEW[J] = -ONE;
+                        resnew[j] = -ONE;
                     }
-                    else if (RESCON[J] >= ZERO)
+                    else if (rescon[j] >= ZERO)
                     {
-                        RESNEW[J] = Math.Max(RESNEW[J], TINY);
+                        resnew[j] = Math.Max(resnew[j], TINY);
                     }
                 }
-                if (NACT > 0)
+                if (nact > 0)
                 {
-                    for (int K = 1; K <= NACT; ++K)
+                    for (int k = 1; k <= nact; ++k)
                     {
-                        RESACT[K] = RESCON[IACT[K]];
-                        RESNEW[IACT[K]] = ZERO;
+                        resact[k] = rescon[iact[k]];
+                        resnew[iact[k]] = ZERO;
                     }
                 }
             }
-            for (int I = 1; I <= N; ++I)
-                STEP[I] = ZERO;
-            double SS = ZERO;
-            double REDUCT = ZERO;
-            int NCALL = 0;
+            for (int i = 1; i <= n; ++i)
+                step[i] = ZERO;
+            double ss = ZERO;
+            double reduct = ZERO;
+            int ncall = 0;
 //
 //     GETACT picks the active set for the current STEP. It also sets DW to
 //       the vector closest to -G that is orthogonal to the normals of the
@@ -1799,46 +1799,46 @@ namespace Cureos.Numerics.Optimizers
 //
             TRSTEP_40:
 
-            ++NCALL;
-            double DSQ = GETACT(N, M, AMAT, ref NACT, IACT, QFAC, RFAC, SNORM, RESNEW, RESACT, G, DW);
-            if (DSQ == ZERO) goto TRSTEP_320;
-            double SCALE = 0.2 * SNORM / Math.Sqrt(DSQ);
-            for (int I = 1; I <= N; ++I)
-                DW[I] *= SCALE;
+            ++ncall;
+            double dsq = GETACT(n, m, amat, ref nact, iact, qfac, rfac, snorm, resnew, resact, g, dw);
+            if (dsq == ZERO) goto TRSTEP_320;
+            double scale = 0.2 * snorm / Math.Sqrt(dsq);
+            for (int i = 1; i <= n; ++i)
+                dw[i] *= scale;
 //
 //     If the modulus of the residual of an active constraint is substantial,
 //       then set D to the shortest move from STEP to the boundaries of the
 //       active constraints.
 //
-            double RESMAX = ZERO;
-            if (NACT > 0)
+            double resmax = ZERO;
+            if (nact > 0)
             {
-                for (int K = 1; K <= NACT; ++K)
-                    RESMAX = Math.Max(RESMAX, RESACT[K]);
+                for (int k = 1; k <= nact; ++k)
+                    resmax = Math.Max(resmax, resact[k]);
             }
-            double GAMMA = ZERO;
-            if (RESMAX > 1.0E-4 * SNORM)
+            double gamma = ZERO;
+            if (resmax > 1.0E-4 * snorm)
             {
-                int IR = 0;
-                for (int K = 1; K <= NACT; ++K)
+                int ir = 0;
+                for (int k = 1; k <= nact; ++k)
                 {
-                    double TEMP = RESACT[K];
-                    if (K >= 2)
+                    double temp = resact[k];
+                    if (k >= 2)
                     {
-                        for (int I = 1; I <= K - 1; ++I)
+                        for (int i = 1; i <= k - 1; ++i)
                         {
-                            ++IR;
-                            TEMP -= RFAC[IR] * W[I];
+                            ++ir;
+                            temp -= rfac[ir] * w[i];
                         }
                     }
-                    ++IR;
-                    W[K] = TEMP / RFAC[IR];
+                    ++ir;
+                    w[k] = temp / rfac[ir];
                 }
-                for (int I = 1; I <= N; ++I)
+                for (int i = 1; i <= n; ++i)
                 {
-                    D[I] = ZERO;
-                    for (int K = 1; K <= NACT; ++K)
-                        D[I] += W[K] * QFAC[I, K];
+                    d[i] = ZERO;
+                    for (int k = 1; k <= nact; ++k)
+                        d[i] += w[k] * qfac[i, k];
                 }
 //
 //     The vector D that has just been calculated is also the shortest move
@@ -1846,26 +1846,26 @@ namespace Cureos.Numerics.Optimizers
 //       to the greatest steplength of this move that satisfies the trust
 //       region bound.
 //
-                double RHS = SNSQ;
-                double DS = ZERO;
-                double DD = ZERO;
-                for (int I = 1; I <= N; ++I)
+                double rhs = snsq;
+                double ds = ZERO;
+                double dd = ZERO;
+                for (int i = 1; i <= n; ++i)
                 {
-                    double SUM = STEP[I] + DW[I];
-                    RHS -= SUM * SUM;
-                    DS += D[I] * SUM;
-                    DD += D[I] * D[I];
+                    double sum = step[i] + dw[i];
+                    rhs -= sum * sum;
+                    ds += d[i] * sum;
+                    dd += d[i] * d[i];
                 }
-                if (RHS > ZERO)
+                if (rhs > ZERO)
                 {
-                    double TEMP = Math.Sqrt(DS * DS + DD * RHS);
-                    if (DS <= ZERO)
+                    double temp = Math.Sqrt(ds * ds + dd * rhs);
+                    if (ds <= ZERO)
                     {
-                        GAMMA = (TEMP - DS) / DD;
+                        gamma = (temp - ds) / dd;
                     }
                     else
                     {
-                        GAMMA = RHS / (TEMP + DS);
+                        gamma = rhs / (temp + ds);
                     }
                 }
 //
@@ -1873,51 +1873,51 @@ namespace Cureos.Numerics.Optimizers
 //       also satisfies the linear constraints.
 //
                 {
-                    int J = 0;
+                    int j = 0;
 
                     TRSTEP_110:
 
-                    if (GAMMA > ZERO)
+                    if (gamma > ZERO)
                     {
-                        ++J;
-                        if (RESNEW[J] > ZERO)
+                        ++j;
+                        if (resnew[j] > ZERO)
                         {
-                            double AD = ZERO;
-                            double ADW = ZERO;
-                            for (int I = 1; I <= N; ++I)
+                            double ad = ZERO;
+                            double adw = ZERO;
+                            for (int i = 1; i <= n; ++i)
                             {
-                                AD += AMAT[I, J] * D[I];
-                                ADW += AMAT[I, J] * DW[I];
+                                ad += amat[i, j] * d[i];
+                                adw += amat[i, j] * dw[i];
                             }
-                            if (AD > ZERO)
+                            if (ad > ZERO)
                             {
-                                double TEMP = Math.Max((RESNEW[J] - ADW) / AD, ZERO);
-                                GAMMA = Math.Min(GAMMA, TEMP);
+                                double temp = Math.Max((resnew[j] - adw) / ad, ZERO);
+                                gamma = Math.Min(gamma, temp);
                             }
                         }
-                        if (J < M) goto TRSTEP_110;
+                        if (j < m) goto TRSTEP_110;
                     }
                 }
-                GAMMA = Math.Min(GAMMA, ONE);
+                gamma = Math.Min(gamma, ONE);
             }
 //
 //     Set the next direction for seeking a reduction in the model function
 //       subject to the trust region bound and the linear constraints.
 //
-            int ICOUNT;
-            if (GAMMA <= ZERO)
+            int icount;
+            if (gamma <= ZERO)
             {
-                for (int I = 1; I <= N; ++I)
-                    D[I] = DW[I];
-                ICOUNT = NACT;
+                for (int i = 1; i <= n; ++i)
+                    d[i] = dw[i];
+                icount = nact;
             }
             else
             {
-                for (int I = 1; I <= N; ++I)
-                    D[I] = DW[I] + GAMMA * D[I];
-                ICOUNT = NACT - 1;
+                for (int i = 1; i <= n; ++i)
+                    d[i] = dw[i] + gamma * d[i];
+                icount = nact - 1;
             }
-            double ALPBD = ONE;
+            double alpbd = ONE;
 //
 //     Set ALPHA to the steplength from STEP along D to the trust region
 //       boundary. Return if the first derivative term of this step is
@@ -1925,186 +1925,186 @@ namespace Cureos.Numerics.Optimizers
 //
             TRSTEP_150:
 
-            ++ICOUNT;
-            double ALPHA;
-            double DG = ZERO;
+            ++icount;
+            double alpha;
+            double dg = ZERO;
             {
-                double RHS = SNSQ - SS;
-                if (RHS <= ZERO) goto TRSTEP_320;
-                double DS = ZERO;
-                double DD = ZERO;
-                for (int I = 1; I <= N; ++I)
+                double rhs = snsq - ss;
+                if (rhs <= ZERO) goto TRSTEP_320;
+                double ds = ZERO;
+                double dd = ZERO;
+                for (int I = 1; I <= n; ++I)
                 {
-                    DG += D[I] * G[I];
-                    DS += D[I] * STEP[I];
-                    DD += D[I] * D[I];
+                    dg += d[I] * g[I];
+                    ds += d[I] * step[I];
+                    dd += d[I] * d[I];
                 }
-                if (DG >= ZERO) goto TRSTEP_320;
-                double TEMP = Math.Sqrt(RHS * DD + DS * DS);
-                if (DS <= ZERO)
+                if (dg >= ZERO) goto TRSTEP_320;
+                double temp = Math.Sqrt(rhs * dd + ds * ds);
+                if (ds <= ZERO)
                 {
-                    ALPHA = (TEMP - DS) / DD;
+                    alpha = (temp - ds) / dd;
                 }
                 else
                 {
-                    ALPHA = RHS / (TEMP + DS);
+                    alpha = rhs / (temp + ds);
                 }
-                if (-ALPHA * DG <= CTEST * REDUCT) goto TRSTEP_320;
+                if (-alpha * dg <= CTEST * reduct) goto TRSTEP_320;
             }
 //
 //     Set DW to the change in gradient along D.
 //
-            int IH = 0;
-            for (int J = 1; J <= N; ++J)
+            int ih = 0;
+            for (int j = 1; j <= n; ++j)
             {
-                DW[J] = ZERO;
-                for (int I = 1; I <= J; ++I)
+                dw[j] = ZERO;
+                for (int i = 1; i <= j; ++i)
                 {
-                    ++IH;
-                    if (I < J) DW[J] += HQ[IH] * D[I];
-                    DW[I] += HQ[IH] * D[J];
+                    ++ih;
+                    if (i < j) dw[j] += hq[ih] * d[i];
+                    dw[i] += hq[ih] * d[j];
                 }
             }
-            for (int K = 1; K <= NPT; ++K)
+            for (int k = 1; k <= npt; ++k)
             {
-                double TEMP = ZERO;
-                for (int J = 1; J <= N; ++J)
-                    TEMP += XPT[K, J] * D[J];
-                TEMP *= PQ[K];
-                for (int I = 1; I <= N; ++I)
-                    DW[I] += TEMP * XPT[K, I];
+                double temp = ZERO;
+                for (int j = 1; j <= n; ++j)
+                    temp += xpt[k, j] * d[j];
+                temp *= pq[k];
+                for (int i = 1; i <= n; ++i)
+                    dw[i] += temp * xpt[k, i];
             }
 //
 //     Set DGD to the curvature of the model along D. Then reduce ALPHA if
 //       necessary to the value that minimizes the model.
 //
-            double DGD = ZERO;
-            for (int I = 1; I <= N; ++I)
-                DGD += D[I] * DW[I];
-            double ALPHT = ALPHA;
-            if (DG + ALPHA * DGD > ZERO)
+            double dgd = ZERO;
+            for (int i = 1; i <= n; ++i)
+                dgd += d[i] * dw[i];
+            double alpht = alpha;
+            if (dg + alpha * dgd > ZERO)
             {
-                ALPHA = -DG / DGD;
+                alpha = -dg / dgd;
             }
 //
 //     Make a further reduction in ALPHA if necessary to preserve feasibility,
 //       and put some scalar products of D with constraint gradients in W.
 //
-            double ALPHM = ALPHA;
-            int JSAV = 0;
-            if (M > 0)
+            double alphm = alpha;
+            int jsav = 0;
+            if (m > 0)
             {
-                for (int J = 1; J <= M; ++J)
+                for (int j = 1; j <= m; ++j)
                 {
-                    double AD = ZERO;
-                    if (RESNEW[J] > ZERO)
+                    double ad = ZERO;
+                    if (resnew[j] > ZERO)
                     {
-                        for (int I = 1; I <= N; ++I)
-                            AD += AMAT[I, J] * D[I];
-                        if (ALPHA * AD > RESNEW[J])
+                        for (int i = 1; i <= n; ++i)
+                            ad += amat[i, j] * d[i];
+                        if (alpha * ad > resnew[j])
                         {
-                            ALPHA = RESNEW[J] / AD;
-                            JSAV = J;
+                            alpha = resnew[j] / ad;
+                            jsav = j;
                         }
                     }
-                    W[J] = AD;
+                    w[j] = ad;
                 }
             }
-            ALPHA = Math.Max(ALPHA, ALPBD);
-            ALPHA = Math.Min(ALPHA, ALPHM);
-            if (ICOUNT == NACT) ALPHA = Math.Min(ALPHA, ONE);
+            alpha = Math.Max(alpha, alpbd);
+            alpha = Math.Min(alpha, alphm);
+            if (icount == nact) alpha = Math.Min(alpha, ONE);
 //
 //     Update STEP, G, RESNEW, RESACT and REDUCT.
 //
-            SS = ZERO;
-            for (int I = 1; I <= N; ++I)
+            ss = ZERO;
+            for (int i = 1; i <= n; ++i)
             {
-                STEP[I] += ALPHA * D[I];
-                SS += STEP[I] * STEP[I];
-                G[I] += ALPHA * DW[I];
+                step[i] += alpha * d[i];
+                ss += step[i] * step[i];
+                g[i] += alpha * dw[i];
             }
-            if (M > 0)
+            if (m > 0)
             {
-                for (int J = 1; J <= M; ++J)
+                for (int j = 1; j <= m; ++j)
                 {
-                    if (RESNEW[J] > ZERO)
+                    if (resnew[j] > ZERO)
                     {
-                        RESNEW[J] = Math.Max(RESNEW[J] - ALPHA * W[J], TINY);
+                        resnew[j] = Math.Max(resnew[j] - alpha * w[j], TINY);
                     }
                 }
             }
-            if (ICOUNT == NACT && NACT > 0)
+            if (icount == nact && nact > 0)
             {
-                for (int K = 1; K <= NACT; ++K)
-                    RESACT[K] *= (ONE - GAMMA);
+                for (int k = 1; k <= nact; ++k)
+                    resact[k] *= (ONE - gamma);
             }
-            REDUCT -= ALPHA * (DG + HALF * ALPHA * DGD);
+            reduct -= alpha * (dg + HALF * alpha * dgd);
 //
 //     Test for termination. Branch to label 40 if there is a new active
 //       constraint and if the distance from STEP to the trust region
 //       boundary is at least 0.2*SNORM.
 //
-            if (ALPHA == ALPHT) goto TRSTEP_320;
+            if (alpha == alpht) goto TRSTEP_320;
             {
-                double TEMP = -ALPHM * (DG + HALF * ALPHM * DGD);
-                if (TEMP <= CTEST * REDUCT) goto TRSTEP_320;
+                double temp = -alphm * (dg + HALF * alphm * dgd);
+                if (temp <= CTEST * reduct) goto TRSTEP_320;
             }
-            if (JSAV > 0)
+            if (jsav > 0)
             {
-                if (SS <= 0.64 * SNSQ) goto TRSTEP_40;
+                if (ss <= 0.64 * snsq) goto TRSTEP_40;
                 goto TRSTEP_320;
             }
-            if (ICOUNT == N) goto TRSTEP_320;
+            if (icount == n) goto TRSTEP_320;
 //
 //     Calculate the next search direction, which is conjugate to the
 //       previous one except in the case ICOUNT=NACT.
 //
-            if (NACT > 0)
+            if (nact > 0)
             {
-                for (int J = NACT + 1; J <= N; ++J)
+                for (int j = nact + 1; j <= n; ++j)
                 {
-                    W[J] = ZERO;
-                    for (int I = 1; I <= N; ++I)
-                        W[J] += G[I] * QFAC[I, J];
+                    w[j] = ZERO;
+                    for (int i = 1; i <= n; ++i)
+                        w[j] += g[i] * qfac[i, j];
                 }
-                for (int I = 1; I <= N; ++I)
+                for (int i = 1; i <= n; ++i)
                 {
-                    double TEMP = ZERO;
-                    for (int J = NACT + 1; J <= N; ++J)
-                        TEMP += QFAC[I, J] * W[J];
-                    W[N + I] = TEMP;
+                    double temp = ZERO;
+                    for (int J = nact + 1; J <= n; ++J)
+                        temp += qfac[i, J] * w[J];
+                    w[n + i] = temp;
                 }
             }
             else
             {
-                for (int I = 1; I <= N; ++I)
-                    W[N + I] = G[I];
+                for (int i = 1; i <= n; ++i)
+                    w[n + i] = g[i];
             }
-            double BETA;
-            if (ICOUNT == NACT)
+            double beta;
+            if (icount == nact)
             {
-                BETA = ZERO;
+                beta = ZERO;
             }
             else
             {
-                double WGD = ZERO;
-                for (int I = 1; I <= N; ++I)
-                    WGD += W[N + I] * DW[I];
-                BETA = WGD / DGD;
+                double wgd = ZERO;
+                for (int i = 1; i <= n; ++i)
+                    wgd += w[n + i] * dw[i];
+                beta = wgd / dgd;
             }
-            for (int I = 1; I <= N; ++I)
-                D[I] = -W[N + I] + BETA * D[I];
-            ALPBD = ZERO;
+            for (int i = 1; i <= n; ++i)
+                d[i] = -w[n + i] + beta * d[i];
+            alpbd = ZERO;
             goto TRSTEP_150;
 //
 //     Return from the subroutine.
 //
             TRSTEP_320:
 
-            SNORM = ZERO;
-            if (REDUCT > ZERO) SNORM = Math.Sqrt(SS);
-            G[1] = ZERO;
-            if (NCALL > 1) G[1] = ONE;
+            snorm = ZERO;
+            if (reduct > ZERO) snorm = Math.Sqrt(ss);
+            g[1] = ZERO;
+            if (ncall > 1) g[1] = ONE;
         }
 
         private static void UPDATE(int N, int NPT, double[,] XPT, double[,] BMAT, double[,] ZMAT, int IDZ,

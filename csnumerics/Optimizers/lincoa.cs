@@ -59,15 +59,15 @@ namespace Cureos.Numerics.Optimizers
         private static readonly string LINCOB_620 = "At the return from LINCOA     Number of function values = {0,6:D}";
 
         private static readonly string PRELIM_140 = LINCOB_260;
-// ReSharper restore ConvertToConstant.Local InconsistentNaming
-
+// ReSharper restore ConvertToConstant.Local
+// ReSharper restore  InconsistentNaming
         #endregion
 
         #region METHODS
 
 // ReSharper disable SuggestUseVarKeywordEvident
-        public static Status LINCOA(CalfunDel CALFUN, int N, int NPT, int M, double[,] A, int IA, double[] B, double[] X,
-            double RHOBEG, double RHOEND, int IPRINT, int MAXFUN, TextWriter logger)
+        public static Status LINCOA(CalfunDel calfun, int n, int npt, int m, double[,] a, int ia, double[] b, double[] x,
+            double rhobeg, double rhoend, int iprint, int maxfun, TextWriter logger)
         {
 //
 //     This subroutine seeks the least value of a function of many variables,
@@ -129,19 +129,19 @@ namespace Cureos.Numerics.Optimizers
 //
 //     Check that N, NPT and MAXFUN are acceptable.
 //
-            double SMALLX = 1.0E-6 * RHOEND;
-            int NP = N + 1;
-            if (N <= 1)
+            double smallx = 1.0E-6 * rhoend;
+            int np = n + 1;
+            if (n <= 1)
             {
                 PRINT(logger, LINCOA_10);
                 return Status.N_TooSmall;
             }
-            if (NPT < N + 2 || NPT > ((N + 2) * NP) / 2)
+            if (npt < n + 2 || npt > ((n + 2) * np) / 2)
             {
                 PRINT(logger, LINCOA_20);
                 return Status.NPT_OutOfRange;
             }
-            if (MAXFUN <= NPT)
+            if (maxfun <= npt)
             {
                 PRINT(logger, LINCOA_30);
                 return Status.MAXFUN_NotLargerThan_NPT;
@@ -151,43 +151,43 @@ namespace Cureos.Numerics.Optimizers
 //       and right hand sides into working space, after increasing the right
 //       hand sides if necessary so that the starting point is feasible.
 //
-            double[,] AMAT = new double[1 + N, 1 + M];
-            double[] BB = new double[1 + M]; // B in LINCOB
-            int IFLAG = 0;
-            if (M > 0)
+            double[,] amat = new double[1 + n, 1 + m];
+            double[] bnorm = new double[1 + m]; // B in LINCOB
+            int iflag = 0;
+            if (m > 0)
             {
-                for (int J = 1; J <= M; ++J)
+                for (int j = 1; j <= m; ++j)
                 {
-                    double SUM = ZERO;
-                    double TEMP = ZERO;
-                    for (int I = 1; I <= N; ++I)
+                    double sum = ZERO;
+                    double temp = ZERO;
+                    for (int i = 1; i <= n; ++i)
                     {
-                        SUM += A[I, J] * X[I];
-                        TEMP += A[I, J] * A[I, J];
+                        sum += a[i, j] * x[i];
+                        temp += a[i, j] * a[i, j];
                     }
-                    if (TEMP == ZERO)
+                    if (temp == ZERO)
                     {
                         PRINT(logger, LINCOA_50);
                         return Status.ConstraintGradientIsZero;
                     }
-                    TEMP = Math.Sqrt(TEMP);
-                    if (SUM - B[J] > SMALLX * TEMP) IFLAG = 1;
-                    BB[J] = Math.Max(B[J], SUM) / TEMP;
-                    for (int I = 1; I <= N; ++I)
+                    temp = Math.Sqrt(temp);
+                    if (sum - b[j] > smallx * temp) iflag = 1;
+                    bnorm[j] = Math.Max(b[j], sum) / temp;
+                    for (int i = 1; i <= n; ++i)
                     {
-                        AMAT[I, J] = A[I, J] / TEMP;
+                        amat[i, j] = a[i, j] / temp;
                     }
                 }
             }
-            if (IFLAG == 1)
+            if (iflag == 1)
             {
-                if (IPRINT > 0) PRINT(logger, LINCOA_70);
+                if (iprint > 0) PRINT(logger, LINCOA_70);
             }
-            return LINCOB(CALFUN, N, NPT, M, AMAT, BB, X, RHOBEG, RHOEND, IPRINT, MAXFUN, logger);
+            return LINCOB(calfun, n, npt, m, amat, bnorm, x, rhobeg, rhoend, iprint, maxfun, logger);
         }
 
-        private static Status LINCOB(CalfunDel CALFUN, int N, int NPT, int M, double[,] AMAT, double[] B, double[] X,
-            double RHOBEG, double RHOEND, int IPRINT, int MAXFUN, TextWriter logger)
+        private static Status LINCOB(CalfunDel calfun, int n, int npt, int m, double[,] amat, double[] b, double[] x,
+            double rhobeg, double rhoend, int iprint, int maxfun, TextWriter logger)
         {
             Status? status = null;
 //
@@ -245,34 +245,34 @@ namespace Cureos.Numerics.Optimizers
 //
 //     Set some constants.
 //
-            int NP = N + 1;
-            int NH = (N * NP) / 2;
-            int NPTM = NPT - NP;
-            int IAMAT = Math.Max(M + 3 * N, Math.Max(2 * M + N, 2 * NPT)) + 1;
-            int NDIM = NPT + N;
+            int np = n + 1;
+            int nh = (n * np) / 2;
+            int nptm = npt - np;
+            int iamat = Math.Max(m + 3 * n, Math.Max(2 * m + n, 2 * npt)) + 1;
+            int ndim = npt + n;
 //
 //     Partition the working space array, so that different parts of it can be
 //     treated separately by the subroutine that performs the main calculation.
 //
-            double[] XBASE = new double[1 + N];
-            double[,] XPT = new double[1 + NPT, 1 + N];
-            double[] FVAL = new double[1 + NPT];
-            double[] XSAV = new double[1 + N];
-            double[] XOPT = new double[1 + N];
-            double[] GOPT = new double[1 + N];
-            double[] HQ = new double[1 + (N * NP) / 2];
-            double[] PQ = new double[1 + NPT];
-            double[,] BMAT = new double[1 + NDIM, 1 + N];
-            double[,] ZMAT = new double[1 + NPT, 1 + NPTM];
-            double[] STEP = new double[1 + N];
-            double[] SP = new double[1 + NPT + NPT];
-            double[] XNEW = new double[1 + N];
-            int[] IACT = new int[1 + N];
-            double[] RESCON = new double[1 + M];
-            double[,] QFAC = new double[1 + N, 1 + N];
-            double[] RFAC = new double[1 + (N * NP) / 2];
-            double[] PQW = new double[1 + NPT + N];
-            double[] W = new double[IAMAT];
+            double[] xbase = new double[1 + n];
+            double[,] xpt = new double[1 + npt, 1 + n];
+            double[] fval = new double[1 + npt];
+            double[] xsav = new double[1 + n];
+            double[] xopt = new double[1 + n];
+            double[] gopt = new double[1 + n];
+            double[] hq = new double[1 + (n * np) / 2];
+            double[] pq = new double[1 + npt];
+            double[,] bmat = new double[1 + ndim, 1 + n];
+            double[,] zmat = new double[1 + npt, 1 + nptm];
+            double[] step = new double[1 + n];
+            double[] sp = new double[1 + npt + npt];
+            double[] xnew = new double[1 + n];
+            int[] iact = new int[1 + n];
+            double[] rescon = new double[1 + m];
+            double[,] qfac = new double[1 + n, 1 + n];
+            double[] rfac = new double[1 + (n * np) / 2];
+            double[] pqw = new double[1 + npt + n];
+            double[] w = new double[iamat];
 //
 //     Set the elements of XBASE, XPT, FVAL, XSAV, XOPT, GOPT, HQ, PQ, BMAT,
 //       ZMAT and SP for the first iteration. An important feature is that,
@@ -281,126 +281,126 @@ namespace Cureos.Numerics.Optimizers
 //       so that the constraint violation is at least 0.2*RHOBEG. Also KOPT
 //       is set so that XPT(KOPT,.) is the initial trust region centre.
 //
-            int KOPT, IDZ;
-            PRELIM(CALFUN, N, NPT, M, AMAT, B, X, RHOBEG, IPRINT, XBASE, XPT, FVAL, XSAV, XOPT, GOPT, out KOPT, HQ, PQ,
-                BMAT, ZMAT, out IDZ, NDIM, SP, RESCON, logger);
+            int kopt, idz;
+            PRELIM(calfun, n, npt, m, amat, b, x, rhobeg, iprint, xbase, xpt, fval, xsav, xopt, gopt, out kopt, hq, pq,
+                bmat, zmat, out idz, ndim, sp, rescon, logger);
 //
 //     Begin the iterative procedure.
 //
-            int NF = NPT;
-            double FOPT = FVAL[1 + KOPT];
-            double RHO = RHOBEG;
-            double DELTA = RHO;
-            int IFEAS = 0;
-            int NACT = 0;
-            int ITEST = 3;
+            int nf = npt;
+            double fopt = fval[1 + kopt];
+            double rho = rhobeg;
+            double delta = rho;
+            int ifeas = 0;
+            int nact = 0;
+            int itest = 3;
 
-            int KNEW, NVALA, NVALB;
-            double FSAVE, XOPTSQ;
+            int knew, nvala, nvalb;
+            double fsave, xoptsq;
 
             LINCOB_10:
 
-            KNEW = 0;
-            NVALA = 0;
-            NVALB = 0;
+            knew = 0;
+            nvala = 0;
+            nvalb = 0;
 //
 //     Shift XBASE if XOPT may be too far from XBASE. First make the changes
 //       to BMAT that do not depend on ZMAT.
 //
             LINCOB_20:
 
-            FSAVE = FOPT;
-            XOPTSQ = ZERO;
-            for (int I = 1; I <= N; ++I)
-                XOPTSQ += XOPT[I] * XOPT[I];
-            if (XOPTSQ >= 1.0E4 * DELTA * DELTA)
+            fsave = fopt;
+            xoptsq = ZERO;
+            for (int i = 1; i <= n; ++i)
+                xoptsq += xopt[i] * xopt[i];
+            if (xoptsq >= 1.0E4 * delta * delta)
             {
-                double QOPTSQ = 0.25 * XOPTSQ;
-                for (int K = 1; K <= NPT; ++K)
+                double qoptsq = 0.25 * xoptsq;
+                for (int k = 1; k <= npt; ++k)
                 {
-                    double SUM = ZERO;
-                    for (int I = 1; I <= N; ++I)
-                        SUM += XPT[K, I] * XOPT[I];
-                    SUM -= HALF * XOPTSQ;
-                    W[NPT + K] = SUM;
-                    SP[K] = ZERO;
-                    for (int I = 1; I <= N; ++I)
+                    double sum = ZERO;
+                    for (int I = 1; I <= n; ++I)
+                        sum += xpt[k, I] * xopt[I];
+                    sum -= HALF * xoptsq;
+                    w[npt + k] = sum;
+                    sp[k] = ZERO;
+                    for (int i = 1; i <= n; ++i)
                     {
-                        XPT[K, I] -= HALF * XOPT[I];
-                        STEP[I] = BMAT[K, I];
-                        W[I] = SUM * XPT[K, I] + QOPTSQ * XOPT[I];
-                        int IP = NPT + I;
-                        for (int J = 1; J <= I; ++J)
-                            BMAT[IP, J] += STEP[I] * W[J] + W[I] * STEP[J];
+                        xpt[k, i] -= HALF * xopt[i];
+                        step[i] = bmat[k, i];
+                        w[i] = sum * xpt[k, i] + qoptsq * xopt[i];
+                        int ip = npt + i;
+                        for (int j = 1; j <= i; ++j)
+                            bmat[ip, j] += step[i] * w[j] + w[i] * step[j];
                     }
                 }
 //
 //     Then the revisions of BMAT that depend on ZMAT are calculated.
 //
-                for (int K = 1; K <= NPTM; ++K)
+                for (int k = 1; k <= nptm; ++k)
                 {
-                    double SUMZ = ZERO;
-                    for (int I = 1; I <= NPT; ++I)
+                    double sumz = ZERO;
+                    for (int i = 1; i <= npt; ++i)
                     {
-                        SUMZ += ZMAT[I, K];
-                        W[I] = W[NPT + I] * ZMAT[I, K];
+                        sumz += zmat[i, k];
+                        w[i] = w[npt + i] * zmat[i, k];
                     }
-                    for (int J = 1; J <= N; ++J)
+                    for (int j = 1; j <= n; ++j)
                     {
-                        double SUM = QOPTSQ * SUMZ * XOPT[J];
-                        for (int I = 1; I <= NPT; ++I)
-                            SUM += W[I] * XPT[I, J];
-                        STEP[J] = SUM;
-                        if (K < IDZ) SUM = -SUM;
-                        for (int I = 1; I <= NPT; ++I)
-                            BMAT[I, J] += SUM * ZMAT[I, K];
+                        double sum = qoptsq * sumz * xopt[j];
+                        for (int i = 1; i <= npt; ++i)
+                            sum += w[i] * xpt[i, j];
+                        step[j] = sum;
+                        if (k < idz) sum = -sum;
+                        for (int i = 1; i <= npt; ++i)
+                            bmat[i, j] += sum * zmat[i, k];
                     }
-                    for (int I = 1; I <= N; ++I)
+                    for (int i = 1; i <= n; ++i)
                     {
-                        int IP = I + NPT;
-                        double TEMP = STEP[I];
-                        if (K < IDZ) TEMP = -TEMP;
-                        for (int J = 1; J <= I; ++J)
-                            BMAT[IP, J] += TEMP * STEP[J];
+                        int ip = i + npt;
+                        double temp = step[i];
+                        if (k < idz) temp = -temp;
+                        for (int j = 1; j <= i; ++j)
+                            bmat[ip, j] += temp * step[j];
                     }
                 }
 //
 //     Update the right hand sides of the constraints.
 //
-                if (M > 0)
+                if (m > 0)
                 {
-                    for (int J = 1; J <= M; ++J)
+                    for (int j = 1; j <= m; ++j)
                     {
-                        double TEMP = ZERO;
-                        for (int I = 1; I <= N; ++I)
-                            TEMP += AMAT[I, J] * XOPT[I];
-                        B[J] -= TEMP;
+                        double temp = ZERO;
+                        for (int i = 1; i <= n; ++i)
+                            temp += amat[i, j] * xopt[i];
+                        b[j] -= temp;
                     }
                 }
 //
 //     The following instructions complete the shift of XBASE, including the
 //       changes to the parameters of the quadratic model.
 //
-                for (int IH = 0, J = 1; J <= N; ++J)
+                for (int ih = 0, j = 1; j <= n; ++j)
                 {
-                    W[J] = ZERO;
-                    for (int K = 1; K <= NPT; ++K)
+                    w[j] = ZERO;
+                    for (int k = 1; k <= npt; ++k)
                     {
-                        W[J] += PQ[K] * XPT[K, J];
-                        XPT[K, J] -= HALF * XOPT[J];
+                        w[j] += pq[k] * xpt[k, j];
+                        xpt[k, j] -= HALF * xopt[j];
                     }
-                    for (int I = 1; I <= J; ++I)
+                    for (int i = 1; i <= j; ++i)
                     {
-                        IH++;
-                        HQ[IH] += W[I] * XOPT[J] + XOPT[I] * W[J];
-                        BMAT[NPT + I, J] = BMAT[NPT + J, I];
+                        ih++;
+                        hq[ih] += w[i] * xopt[j] + xopt[i] * w[j];
+                        bmat[npt + i, j] = bmat[npt + j, i];
                     }
                 }
-                for (int J = 1; J <= N; ++J)
+                for (int j = 1; j <= n; ++j)
                 {
-                    XBASE[J] += XOPT[J];
-                    XOPT[J] = ZERO;
-                    XPT[KOPT, J] = ZERO;
+                    xbase[j] += xopt[j];
+                    xopt[j] = ZERO;
+                    xpt[kopt, j] = ZERO;
                 }
             }
 //
@@ -410,42 +410,42 @@ namespace Cureos.Numerics.Optimizers
 //       except that SNORM is zero on return if the projected gradient is
 //       unsuitable for starting the conjugate gradient iterations.
 //
-            double F = ZERO;
-            double VQUAD = ZERO;
-            double SNORM = ZERO;
-            double DELSAV = DELTA;
-            int KSAVE = KNEW;
-            if (KNEW == 0)
+            double f = ZERO;
+            double vquad = ZERO;
+            double snorm = ZERO;
+            double delsav = delta;
+            int ksave = knew;
+            if (knew == 0)
             {
-                SNORM = DELTA;
-                for (int I = 1; I <= N; ++I)
-                    XNEW[I] = GOPT[I];
-                TRSTEP(N, NPT, M, AMAT, XPT, HQ, PQ, ref NACT, IACT, RESCON, QFAC, RFAC, ref SNORM, STEP, XNEW);
+                snorm = delta;
+                for (int i = 1; i <= n; ++i)
+                    xnew[i] = gopt[i];
+                TRSTEP(n, npt, m, amat, xpt, hq, pq, ref nact, iact, rescon, qfac, rfac, ref snorm, step, xnew);
 //
 //     A trust region step is applied whenever its length, namely SNORM, is at
 //       least HALF*DELTA. It is also applied if its length is at least 0.1999
 //       times DELTA and if a line search of TRSTEP has caused a change to the
 //       active set. Otherwise there is a branch below to label 530 or 560.
 //
-                double TEMP = HALF * DELTA;
-                if (XNEW[1] >= HALF) TEMP = 0.1999 * DELTA;
-                if (SNORM <= TEMP)
+                double temp = HALF * delta;
+                if (xnew[1] >= HALF) temp = 0.1999 * delta;
+                if (snorm <= temp)
                 {
-                    DELTA *= HALF;
-                    if (DELTA <= 1.4 * RHO) DELTA = RHO;
-                    ++NVALA;
-                    ++NVALB;
-                    TEMP = SNORM / RHO;
-                    if (DELSAV > RHO) TEMP = ONE;
-                    if (TEMP >= HALF) NVALA = 0;
-                    if (TEMP >= TENTH) NVALB = 0;
-                    if (DELSAV > RHO) goto LINCOB_530;
-                    if (NVALA < 5 && NVALB < 3) goto LINCOB_530;
-                    if (SNORM > ZERO) KSAVE = -1;
+                    delta *= HALF;
+                    if (delta <= 1.4 * rho) delta = rho;
+                    ++nvala;
+                    ++nvalb;
+                    temp = snorm / rho;
+                    if (delsav > rho) temp = ONE;
+                    if (temp >= HALF) nvala = 0;
+                    if (temp >= TENTH) nvalb = 0;
+                    if (delsav > rho) goto LINCOB_530;
+                    if (nvala < 5 && nvalb < 3) goto LINCOB_530;
+                    if (snorm > ZERO) ksave = -1;
                     goto LINCOB_560;
                 }
-                NVALA = 0;
-                NVALB = 0;
+                nvala = 0;
+                nvalb = 0;
 //
 //     Alternatively, KNEW is positive. Then the model step is calculated
 //       within a trust region of radius DEL, after setting the gradient at
@@ -455,19 +455,19 @@ namespace Cureos.Numerics.Optimizers
             }
             else
             {
-                double DEL = Math.Max(TENTH * DELTA, RHO);
-                for (int I = 1; I <= N; ++I)
-                    W[I] = BMAT[KNEW, I];
-                for (int K = 1; K <= NPT; ++K)
-                    PQW[K] = ZERO;
-                for (int J = 1; J <= NPTM; ++J)
+                double del = Math.Max(TENTH * delta, rho);
+                for (int i = 1; i <= n; ++i)
+                    w[i] = bmat[knew, i];
+                for (int k = 1; k <= npt; ++k)
+                    pqw[k] = ZERO;
+                for (int j = 1; j <= nptm; ++j)
                 {
-                    double TEMP = ZMAT[KNEW, J];
-                    if (J < IDZ) TEMP = -TEMP;
-                    for (int K = 1; K <= NPT; K++)
-                        PQW[K] += TEMP * ZMAT[K, J];
+                    double temp = zmat[knew, j];
+                    if (j < idz) temp = -temp;
+                    for (int k = 1; k <= npt; k++)
+                        pqw[k] += temp * zmat[k, j];
                 }
-                QMSTEP(N, NPT, M, AMAT, XPT, XOPT, NACT, IACT, RESCON, QFAC, KOPT, KNEW, DEL, STEP, W, PQW, out IFEAS);
+                QMSTEP(n, npt, m, amat, xpt, xopt, nact, iact, rescon, qfac, kopt, knew, del, step, w, pqw, out ifeas);
             }
 //
 //     Set VQUAD to the change to the quadratic model when the move STEP is
@@ -475,28 +475,28 @@ namespace Cureos.Numerics.Optimizers
 //       negative. If it is nonnegative due to rounding errors in this case,
 //       there is a branch to label 530 to try to improve the model.
 //
-            for (int IH = 0, J = 1; J <= N; ++J)
+            for (int ih = 0, j = 1; j <= n; ++j)
             {
-                VQUAD = VQUAD + STEP[J] * GOPT[J];
-                for (int I = 1; I <= J; ++I)
+                vquad = vquad + step[j] * gopt[j];
+                for (int i = 1; i <= j; ++i)
                 {
-                    ++IH;
-                    double TEMP = STEP[I] * STEP[J];
-                    if (I == J) TEMP *= HALF;
-                    VQUAD = VQUAD + TEMP * HQ[IH];
+                    ++ih;
+                    double temp = step[i] * step[j];
+                    if (i == j) temp *= HALF;
+                    vquad = vquad + temp * hq[ih];
                 }
             }
-            for (int K = 1; K <= NPT; ++K)
+            for (int k = 1; k <= npt; ++k)
             {
-                double TEMP = ZERO;
-                for (int J = 1; J <= N; ++J)
+                double temp = ZERO;
+                for (int j = 1; j <= n; ++j)
                 {
-                    TEMP = TEMP + XPT[K, J] * STEP[J];
-                    SP[NPT + K] = TEMP;
+                    temp = temp + xpt[k, j] * step[j];
+                    sp[npt + k] = temp;
                 }
-                VQUAD = VQUAD + HALF * PQ[K] * TEMP * TEMP;
+                vquad = vquad + HALF * pq[k] * temp * temp;
             }
-            if (KSAVE == 0 && VQUAD >= ZERO) goto LINCOB_530;
+            if (ksave == 0 && vquad >= ZERO) goto LINCOB_530;
 //
 //     Calculate the next value of the objective function. The difference
 //       between the actual new value of F and the value predicted by the
@@ -504,106 +504,106 @@ namespace Cureos.Numerics.Optimizers
 //
             LINCOB_220:
 
-            ++NF;
-            if (NF > MAXFUN)
+            ++nf;
+            if (nf > maxfun)
             {
-                --NF;
-                if (IPRINT > 0) PRINT(logger, LINCOB_230);
+                --nf;
+                if (iprint > 0) PRINT(logger, LINCOB_230);
                 status = Status.MAXFUN_Reached;
                 goto LINCOB_600;
             }
-            double XDIFF = ZERO;
-            for (int I = 1; I <= N; ++I)
+            double xdiff = ZERO;
+            for (int i = 1; i <= n; ++i)
             {
-                XNEW[I] = XOPT[I] + STEP[I];
-                X[I] = XBASE[I] + XNEW[I];
-                XDIFF += Math.Pow(X[I] - XSAV[I], 2.0);
+                xnew[i] = xopt[i] + step[i];
+                x[i] = xbase[i] + xnew[i];
+                xdiff += Math.Pow(x[i] - xsav[i], 2.0);
             }
-            XDIFF = Math.Sqrt(XDIFF);
-            if (KSAVE == -1) XDIFF = RHO;
-            if (XDIFF <= TENTH * RHO || XDIFF >= DELTA + DELTA)
+            xdiff = Math.Sqrt(xdiff);
+            if (ksave == -1) xdiff = rho;
+            if (xdiff <= TENTH * rho || xdiff >= delta + delta)
             {
-                IFEAS = 0;
-                if (IPRINT > 0) PRINT(logger, LINCOB_250);
+                ifeas = 0;
+                if (iprint > 0) PRINT(logger, LINCOB_250);
                 status = Status.X_RoundingErrorsPreventUpdate;
                 goto LINCOB_600;
             }
-            if (KSAVE <= 0) IFEAS = 1;
-            F = IFEAS;
-            CALFUN(N, X, ref F);
-            if (IPRINT == 3)
-                PRINT(logger, LINCOB_260, NF, F, FORMAT("  ", "18:E6", X, 1, N));
-            if (KSAVE == -1) goto LINCOB_600;
-            double DIFF = F - FOPT - VQUAD;
+            if (ksave <= 0) ifeas = 1;
+            f = ifeas;
+            calfun(n, x, ref f);
+            if (iprint == 3)
+                PRINT(logger, LINCOB_260, nf, f, FORMAT("  ", "18:E6", x, 1, n));
+            if (ksave == -1) goto LINCOB_600;
+            double diff = f - fopt - vquad;
 //
 //     If X is feasible, then set DFFALT to the difference between the new
 //       value of F and the value predicted by the alternative model.
 //
-            double DFFALT = ZERO;
-            if (IFEAS == 1 && ITEST < 3)
+            double dffalt = ZERO;
+            if (ifeas == 1 && itest < 3)
             {
-                for (int K = 1; K <= NPT; ++K)
+                for (int k = 1; k <= npt; ++k)
                 {
-                    PQW[K] = ZERO;
-                    W[K] = FVAL[K] - FVAL[KOPT];
+                    pqw[k] = ZERO;
+                    w[k] = fval[k] - fval[kopt];
                 }
-                for (int J = 1; J <= NPTM; ++J)
+                for (int j = 1; j <= nptm; ++j)
                 {
-                    double SUM = ZERO;
-                    for (int I = 1; I <= NPT; ++I)
-                        SUM += W[I] * ZMAT[I, J];
-                    if (J < IDZ) SUM = -SUM;
-                    for (int K = 1; K <= NPT; ++K)
-                        PQW[K] = PQW[K] + SUM * ZMAT[K, J];
+                    double sum = ZERO;
+                    for (int i = 1; i <= npt; ++i)
+                        sum += w[i] * zmat[i, j];
+                    if (j < idz) sum = -sum;
+                    for (int k = 1; k <= npt; ++k)
+                        pqw[k] = pqw[k] + sum * zmat[k, j];
                 }
-                double VQALT = ZERO;
-                for (int K = 1; K <= NPT; ++K)
+                double vqalt = ZERO;
+                for (int k = 1; k <= npt; ++k)
                 {
-                    double SUM = ZERO;
-                    for (int J = 1; J <= N; ++J)
-                        SUM += BMAT[K, J] * STEP[J];
-                    VQALT = VQALT + SUM * W[K];
-                    VQALT += PQW[K] * SP[NPT + K] * (HALF * SP[NPT + K] + SP[K]);
+                    double sum = ZERO;
+                    for (int j = 1; j <= n; ++j)
+                        sum += bmat[k, j] * step[j];
+                    vqalt = vqalt + sum * w[k];
+                    vqalt += pqw[k] * sp[npt + k] * (HALF * sp[npt + k] + sp[k]);
                 }
-                DFFALT = F - FOPT - VQALT;
+                dffalt = f - fopt - vqalt;
             }
-            if (ITEST == 3)
+            if (itest == 3)
             {
-                DFFALT = DIFF;
-                ITEST = 0;
+                dffalt = diff;
+                itest = 0;
             }
 //
 //     Pick the next value of DELTA after a trust region step.
 //
-            double RATIO = ZERO;
-            if (KSAVE == 0)
+            double ratio = ZERO;
+            if (ksave == 0)
             {
-                RATIO = (F - FOPT) / VQUAD;
-                if (RATIO <= TENTH)
+                ratio = (f - fopt) / vquad;
+                if (ratio <= TENTH)
                 {
-                    DELTA *= HALF;
+                    delta *= HALF;
                 }
-                else if (RATIO <= 0.7)
+                else if (ratio <= 0.7)
                 {
-                    DELTA = Math.Max(HALF * DELTA, SNORM);
+                    delta = Math.Max(HALF * delta, snorm);
                 }
                 else
                 {
-                    double TEMP = Math.Sqrt(2.0) * DELTA;
-                    DELTA = Math.Max(HALF * DELTA, SNORM + SNORM);
-                    DELTA = Math.Min(DELTA, TEMP);
+                    double temp = Math.Sqrt(2.0) * delta;
+                    delta = Math.Max(HALF * delta, snorm + snorm);
+                    delta = Math.Min(delta, temp);
                 }
-                if (DELTA <= 1.4 * RHO) DELTA = RHO;
+                if (delta <= 1.4 * rho) delta = rho;
             }
 //
 //     Update BMAT, ZMAT and IDZ, so that the KNEW-th interpolation point
 //       can be moved. If STEP is a trust region step, then KNEW is zero at
 //       present, but a positive value is picked by subroutine UPDATE.
 //
-            UPDATE(N, NPT, XPT, BMAT, ZMAT, IDZ, SP, STEP, KOPT, ref KNEW);
-            if (KNEW == 0)
+            UPDATE(n, npt, xpt, bmat, zmat, idz, sp, step, kopt, ref knew);
+            if (knew == 0)
             {
-                if (IPRINT > 0) PRINT(logger, LINCOB_320);
+                if (iprint > 0) PRINT(logger, LINCOB_320);
                 status = Status.UpdatingFormulaDenominatorZero;
                 goto LINCOB_600;
             }
@@ -613,10 +613,10 @@ namespace Cureos.Numerics.Optimizers
 //       interpolation conditions. Otherwise the new model is constructed
 //       by the symmetric Broyden method in the usual way.
 //
-            if (IFEAS == 1)
+            if (ifeas == 1)
             {
-                ++ITEST;
-                if (Math.Abs(DFFALT) >= TENTH * Math.Abs(DIFF)) ITEST = 0;
+                ++itest;
+                if (Math.Abs(dffalt) >= TENTH * Math.Abs(diff)) itest = 0;
             }
 //
 //     Update the second derivatives of the model by the symmetric Broyden
@@ -625,114 +625,114 @@ namespace Cureos.Numerics.Optimizers
 //       PQ(KNEW) is included in the second derivative matrix HQ. W is used
 //       later for the gradient of the new KNEW-th Lagrange function.       
 //
-            if (ITEST < 3)
+            if (itest < 3)
             {
-                for (int K = 1; K <= NPT; ++K)
-                    PQW[K] = ZERO;
-                for (int J = 1; J <= NPTM; ++J)
+                for (int k = 1; k <= npt; ++k)
+                    pqw[k] = ZERO;
+                for (int j = 1; j <= nptm; ++j)
                 {
-                    double TEMP = ZMAT[KNEW, J];
-                    if (TEMP != ZERO)
+                    double temp = zmat[knew, j];
+                    if (temp != ZERO)
                     {
-                        if (J < IDZ) TEMP = -TEMP;
-                        for ( /*340*/ int K = 1; K <= NPT; ++K)
-                            PQW[K] += TEMP * ZMAT[K, J];
+                        if (j < idz) temp = -temp;
+                        for ( /*340*/ int K = 1; K <= npt; ++K)
+                            pqw[K] += temp * zmat[K, j];
                     }
                 }
-                for (int IH = 0, I = 1; I <= N; ++I)
+                for (int ih = 0, i = 1; i <= n; ++i)
                 {
-                    W[I] = BMAT[KNEW, I];
-                    double TEMP = PQ[KNEW] * XPT[KNEW, I];
-                    for (int J = 1; J <= I; ++J)
+                    w[i] = bmat[knew, i];
+                    double temp = pq[knew] * xpt[knew, i];
+                    for (int j = 1; j <= i; ++j)
                     {
-                        ++IH;
-                        HQ[IH] += TEMP * XPT[KNEW, J];
+                        ++ih;
+                        hq[ih] += temp * xpt[knew, j];
                     }
                 }
-                PQ[KNEW] = ZERO;
-                for (int K = 1; K <= NPT; ++K)
-                    PQ[K] += DIFF * PQW[K];
+                pq[knew] = ZERO;
+                for (int k = 1; k <= npt; ++k)
+                    pq[k] += diff * pqw[k];
             }
 //
 //     Include the new interpolation point with the corresponding updates of
 //       SP. Also make the changes of the symmetric Broyden method to GOPT at
 //       the old XOPT if ITEST is less than 3.
 //
-            FVAL[KNEW] = F;
-            SP[KNEW] = SP[KOPT] + SP[NPT + KOPT];
-            double SSQ = ZERO;
-            for (int I = 1; I <= N; ++I)
+            fval[knew] = f;
+            sp[knew] = sp[kopt] + sp[npt + kopt];
+            double ssq = ZERO;
+            for (int i = 1; i <= n; ++i)
             {
-                XPT[KNEW, I] = XNEW[I];
-                SSQ += STEP[I] * STEP[I];
+                xpt[knew, i] = xnew[i];
+                ssq += step[i] * step[i];
             }
-            SP[NPT + KNEW] = SP[NPT + KOPT] + SSQ;
-            if (ITEST < 3)
+            sp[npt + knew] = sp[npt + kopt] + ssq;
+            if (itest < 3)
             {
-                for (int K = 1; K <= NPT; ++K)
+                for (int k = 1; k <= npt; ++k)
                 {
-                    double TEMP = PQW[K] * SP[K];
-                    for (int I = 1; I <= N; ++I)
-                        W[I] += TEMP * XPT[K, I];
+                    double temp = pqw[k] * sp[k];
+                    for (int i = 1; i <= n; ++i)
+                        w[i] += temp * xpt[k, i];
                 }
-                for (int I = 1; I <= N; ++I)
-                    GOPT[I] += +DIFF * W[I];
+                for (int i = 1; i <= n; ++i)
+                    gopt[i] += +diff * w[i];
             }
 //
 //     Update FOPT, XSAV, XOPT, KOPT, RESCON and SP if the new F is the
 //       least calculated value so far with a feasible vector of variables.
 //
-            if (F < FOPT && IFEAS == 1)
+            if (f < fopt && ifeas == 1)
             {
-                FOPT = F;
-                for (int J = 1; J <= N; ++J)
+                fopt = f;
+                for (int j = 1; j <= n; ++j)
                 {
-                    XSAV[J] = X[J];
-                    XOPT[J] = XNEW[J];
+                    xsav[j] = x[j];
+                    xopt[j] = xnew[j];
                 }
-                KOPT = KNEW;
-                SNORM = Math.Sqrt(SSQ);
-                for (int J = 1; J <= M; ++J)
+                kopt = knew;
+                snorm = Math.Sqrt(ssq);
+                for (int j = 1; j <= m; ++j)
                 {
-                    if (RESCON[J] >= DELTA + SNORM)
+                    if (rescon[j] >= delta + snorm)
                     {
-                        RESCON[J] = SNORM - RESCON[J];
+                        rescon[j] = snorm - rescon[j];
                     }
                     else
                     {
-                        RESCON[J] += +SNORM;
-                        if (RESCON[J] + DELTA > ZERO)
+                        rescon[j] += +snorm;
+                        if (rescon[j] + delta > ZERO)
                         {
-                            double TEMP = B[J];
-                            for (int I = 1; I <= N; ++I)
-                                TEMP -= XOPT[I] * AMAT[I, J];
-                            TEMP = Math.Max(TEMP, ZERO);
-                            if (TEMP >= DELTA) TEMP = -TEMP;
-                            RESCON[J] = TEMP;
+                            double temp = b[j];
+                            for (int I = 1; I <= n; ++I)
+                                temp -= xopt[I] * amat[I, j];
+                            temp = Math.Max(temp, ZERO);
+                            if (temp >= delta) temp = -temp;
+                            rescon[j] = temp;
                         }
                     }
                 }
-                for (int K = 1; K <= NPT; ++K)
-                    SP[K] = SP[K] + SP[NPT + K];
+                for (int k = 1; k <= npt; ++k)
+                    sp[k] = sp[k] + sp[npt + k];
 //
 //     Also revise GOPT when symmetric Broyden updating is applied.
 //
-                if (ITEST < 3)
+                if (itest < 3)
                 {
-                    for (int IH = 0, J = 1; J <= N; ++J)
+                    for (int ih = 0, j = 1; j <= n; ++j)
                     {
-                        for (int I = 1; I <= J; ++I)
+                        for (int i = 1; i <= j; ++i)
                         {
-                            ++IH;
-                            if (I < J) GOPT[J] += HQ[IH] * STEP[I];
-                            GOPT[I] += HQ[IH] * STEP[J];
+                            ++ih;
+                            if (i < j) gopt[j] += hq[ih] * step[i];
+                            gopt[i] += hq[ih] * step[j];
                         }
                     }
-                    for (int K = 1; K <= NPT; ++K)
+                    for (int k = 1; k <= npt; ++k)
                     {
-                        double TEMP = PQ[K] * SP[NPT + K];
-                        for (int I = 1; I <= N; ++I)
-                            GOPT[I] += TEMP * XPT[K, I];
+                        double temp = pq[k] * sp[npt + k];
+                        for (int i = 1; i <= n; ++i)
+                            gopt[i] += temp * xpt[k, i];
                     }
                 }
             }
@@ -741,36 +741,36 @@ namespace Cureos.Numerics.Optimizers
 //       this interpolant gives substantial reductions in the predictions
 //       of values of F at feasible points.
 //
-            if (ITEST == 3)
+            if (itest == 3)
             {
-                for (int K = 1; K <= NPT; ++K)
+                for (int k = 1; k <= npt; ++k)
                 {
-                    PQ[K] = ZERO;
-                    W[K] = FVAL[K] - FVAL[KOPT];
+                    pq[k] = ZERO;
+                    w[k] = fval[k] - fval[kopt];
                 }
-                for (int J = 1; J <= NPTM; ++J)
+                for (int j = 1; j <= nptm; ++j)
                 {
-                    double SUM = ZERO;
-                    for (int I = 1; I <= NPT; ++I)
-                        SUM += W[I] * ZMAT[I, J];
-                    if (J < IDZ) SUM = -SUM;
-                    for (int K = 1; K <= NPT; ++K)
-                        PQ[K] = PQ[K] + SUM * ZMAT[K, J];
+                    double sum = ZERO;
+                    for (int i = 1; i <= npt; ++i)
+                        sum += w[i] * zmat[i, j];
+                    if (j < idz) sum = -sum;
+                    for (int k = 1; k <= npt; ++k)
+                        pq[k] = pq[k] + sum * zmat[k, j];
                 }
-                for (int J = 1; J <= N; ++J)
+                for (int j = 1; j <= n; ++j)
                 {
-                    GOPT[J] = ZERO;
-                    for (int I = 1; I <= NPT; ++I)
-                        GOPT[J] += W[I] * BMAT[I, J];
+                    gopt[j] = ZERO;
+                    for (int i = 1; i <= npt; ++i)
+                        gopt[j] += w[i] * bmat[i, j];
                 }
-                for (int K = 1; K <= NPT; ++K)
+                for (int k = 1; k <= npt; ++k)
                 {
-                    double TEMP = PQ[K] * SP[K];
-                    for (int I = 1; I <= N; ++I)
-                        GOPT[I] += TEMP * XPT[K, I];
+                    double temp = pq[k] * sp[k];
+                    for (int i = 1; i <= n; ++i)
+                        gopt[i] += temp * xpt[k, i];
                 }
-                for (int IH = 1; IH <= NH; ++IH)
-                    HQ[IH] = ZERO;
+                for (int ih = 1; ih <= nh; ++ih)
+                    hq[ih] = ZERO;
             }
 //
 //     If a trust region step has provided a sufficient decrease in F, then
@@ -778,25 +778,25 @@ namespace Cureos.Numerics.Optimizers
 //       takes a model step is followed by an attempt to take a trust region
 //       step.
 //
-            KNEW = 0;
-            if (KSAVE > 0) goto LINCOB_20;
-            if (RATIO >= TENTH) goto LINCOB_20;
+            knew = 0;
+            if (ksave > 0) goto LINCOB_20;
+            if (ratio >= TENTH) goto LINCOB_20;
 //
 //     Alternatively, find out if the interpolation points are close enough
 //       to the best point so far.
 //
             LINCOB_530:
 
-            double DISTSQ = Math.Max(DELTA * DELTA, 4.0 * RHO * RHO);
-            for (int K = 1; K <= NPT; ++K)
+            double distsq = Math.Max(delta * delta, 4.0 * rho * rho);
+            for (int k = 1; k <= npt; ++k)
             {
-                double SUM = ZERO;
-                for (int J = 1; J <= N; ++J)
-                    SUM += Math.Pow(XPT[K, J] - XOPT[J], 2.0);
-                if (SUM > DISTSQ)
+                double sum = ZERO;
+                for (int j = 1; j <= n; ++j)
+                    sum += Math.Pow(xpt[k, j] - xopt[j], 2.0);
+                if (sum > distsq)
                 {
-                    KNEW = K;
-                    DISTSQ = SUM;
+                    knew = k;
+                    distsq = sum;
                 }
             }
 //
@@ -806,37 +806,37 @@ namespace Cureos.Numerics.Optimizers
 //       trust region step was calculated, then try a "trust region" step
 //       instead.
 //
-            if (KNEW > 0) goto LINCOB_20;
-            KNEW = 0;
-            if (FOPT < FSAVE) goto LINCOB_20;
-            if (DELSAV > RHO) goto LINCOB_20;
+            if (knew > 0) goto LINCOB_20;
+            knew = 0;
+            if (fopt < fsave) goto LINCOB_20;
+            if (delsav > rho) goto LINCOB_20;
 //
 //     The calculations with the current value of RHO are complete.
 //       Pick the next value of RHO.
 //
             LINCOB_560:
 
-            if (RHO > RHOEND)
+            if (rho > rhoend)
             {
-                DELTA = HALF * RHO;
-                if (RHO > 250.0 * RHOEND)
+                delta = HALF * rho;
+                if (rho > 250.0 * rhoend)
                 {
-                    RHO *= TENTH;
+                    rho *= TENTH;
                 }
-                else if (RHO <= 16.0 * RHOEND)
+                else if (rho <= 16.0 * rhoend)
                 {
-                    RHO = RHOEND;
+                    rho = rhoend;
                 }
                 else
                 {
-                    RHO = Math.Sqrt(RHO * RHOEND);
+                    rho = Math.Sqrt(rho * rhoend);
                 }
-                DELTA = Math.Max(DELTA, RHO);
-                if (IPRINT >= 2)
+                delta = Math.Max(delta, rho);
+                if (iprint >= 2)
                 {
-                    if (IPRINT >= 3) PRINT(logger, LINCOB_570);
-                    PRINT(logger, LINCOB_580, RHO, NF);
-                    PRINT(logger, LINCOB_590, FOPT, FORMAT("  ", "18:E6", XBASE.Zip(XOPT, (xb, xo) => xb + xo), 1, N));
+                    if (iprint >= 3) PRINT(logger, LINCOB_570);
+                    PRINT(logger, LINCOB_580, rho, nf);
+                    PRINT(logger, LINCOB_590, fopt, FORMAT("  ", "18:E6", xbase.Zip(xopt, (xb, xo) => xb + xo), 1, n));
                 }
                 goto LINCOB_10;
             }
@@ -844,23 +844,23 @@ namespace Cureos.Numerics.Optimizers
 //     Return from the calculation, after branching to label 220 for another
 //       Newton-Raphson step if it has not been tried before.
 //
-            if (KSAVE == -1) goto LINCOB_220;
+            if (ksave == -1) goto LINCOB_220;
 
             LINCOB_600:
 
-            if (FOPT <= F || IFEAS == 0)
+            if (fopt <= f || ifeas == 0)
             {
-                for (int I = 1; I <= N; ++I)
-                    X[I] = XSAV[I];
-                F = FOPT;
+                for (int i = 1; i <= n; ++i)
+                    x[i] = xsav[i];
+                f = fopt;
             }
-            if (IPRINT >= 1)
+            if (iprint >= 1)
             {
-                PRINT(logger, LINCOB_620, NF);
-                PRINT(logger, LINCOB_590, F, FORMAT("  ", "18:E6", X, 1, N));
+                PRINT(logger, LINCOB_620, nf);
+                PRINT(logger, LINCOB_590, f, FORMAT("  ", "18:E6", x, 1, n));
             }
-            W[1] = F;
-            W[2] = NF + HALF;
+            w[1] = f;
+            w[2] = nf + HALF;
 
             return status.GetValueOrDefault(Status.Success);
         }

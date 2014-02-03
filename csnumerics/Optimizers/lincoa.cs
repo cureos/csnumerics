@@ -60,7 +60,6 @@ namespace Cureos.Numerics.Optimizers
 
         private static readonly string PRELIM_140 = LINCOB_260;
 // ReSharper restore ConvertToConstant.Local
-// ReSharper restore  InconsistentNaming
         #endregion
 
         #region METHODS
@@ -2107,11 +2106,11 @@ namespace Cureos.Numerics.Optimizers
             if (ncall > 1) g[1] = ONE;
         }
 
-        private static void UPDATE(int N, int NPT, double[,] XPT, double[,] BMAT, double[,] ZMAT, int IDZ,
-            double[] SP, double[] STEP, int KOPT, ref int KNEW)
+        private static void UPDATE(int n, int npt, double[,] xpt, double[,] bmat, double[,] zmat, int idz,
+            double[] sp, double[] step, int kopt, ref int knew)
         {
-            double[] VLAG = new double[1 + NPT + N];
-            double[] W = new double[1 + NPT + N];
+            double[] vlag = new double[1 + npt + n];
+            double[] w = new double[1 + npt + n];
 //
 //     The arguments N, NPT, XPT, BMAT, ZMAT, IDZ, NDIM ,SP and STEP are
 //       identical to the corresponding arguments in SUBROUTINE LINCOB.
@@ -2132,86 +2131,86 @@ namespace Cureos.Numerics.Optimizers
 //
 //     Set some constants.
 //
-            double NPTM = NPT - N - 1;
+            double nptm = npt - n - 1;
 //
 //     Calculate VLAG and BETA for the current choice of STEP. The first NPT
 //       elements of VLAG are set to the values of the Lagrange functions at
 //       XPT(KOPT,.)+STEP(.). The first NPT components of W_check are held
 //       in W, where W_check is defined in a paper on the updating method.
 //
-            for (int K = 1; K <= NPT; ++K)
+            for (int k = 1; k <= npt; ++k)
             {
-                W[K] = SP[NPT + K] * (HALF * SP[NPT + K] + SP[K]);
-                double SUM = ZERO;
-                for (int J = 1; J <= N; ++J)
-                    SUM += BMAT[K, J] * STEP[J];
-                VLAG[K] = SUM;
+                w[k] = sp[npt + k] * (HALF * sp[npt + k] + sp[k]);
+                double sum = ZERO;
+                for (int j = 1; j <= n; ++j)
+                    sum += bmat[k, j] * step[j];
+                vlag[k] = sum;
             }
-            double BETA = ZERO;
-            for (int K = 1; K <= NPTM; ++K)
+            double beta = ZERO;
+            for (int k = 1; k <= nptm; ++k)
             {
-                double SUM = ZERO;
-                for (int I = 1; I <= NPT; ++I)
-                    SUM = SUM + ZMAT[I, K] * W[I];
-                if (K < IDZ)
+                double sum = ZERO;
+                for (int i = 1; i <= npt; ++i)
+                    sum = sum + zmat[i, k] * w[i];
+                if (k < idz)
                 {
-                    BETA += SUM * SUM;
-                    SUM = -SUM;
+                    beta += sum * sum;
+                    sum = -sum;
                 }
                 else
                 {
-                    BETA -= SUM * SUM;
+                    beta -= sum * sum;
                 }
-                for (int I = 1; I <= NPT; ++I)
-                    VLAG[I] = VLAG[I] + SUM * ZMAT[I, K];
+                for (int i = 1; i <= npt; ++i)
+                    vlag[i] = vlag[i] + sum * zmat[i, k];
             }
-            double BSUM = ZERO;
-            double DX = ZERO;
-            double SSQ = ZERO;
-            for (int J = 1; J <= N; ++J)
+            double bsum = ZERO;
+            double dx = ZERO;
+            double ssq = ZERO;
+            for (int j = 1; j <= n; ++j)
             {
-                double SUM = ZERO;
-                for (int I = 1; I <= NPT; ++I)
-                    SUM += W[I] * BMAT[I, J];
-                BSUM += SUM * STEP[J];
-                int JP = NPT + J;
-                for (int K = 1; K <= N; ++K)
-                    SUM += BMAT[JP, K] * STEP[K];
-                VLAG[JP] = SUM;
-                BSUM += SUM * STEP[J];
-                DX += STEP[J] * XPT[KOPT, J];
-                SSQ += STEP[J] * STEP[J];
+                double sum = ZERO;
+                for (int i = 1; i <= npt; ++i)
+                    sum += w[i] * bmat[i, j];
+                bsum += sum * step[j];
+                int jp = npt + j;
+                for (int k = 1; k <= n; ++k)
+                    sum += bmat[jp, k] * step[k];
+                vlag[jp] = sum;
+                bsum += sum * step[j];
+                dx += step[j] * xpt[kopt, j];
+                ssq += step[j] * step[j];
             }
-            BETA = DX * DX + SSQ * (SP[KOPT] + DX + DX + HALF * SSQ) + BETA - BSUM;
-            VLAG[KOPT] += +ONE;
+            beta = dx * dx + ssq * (sp[kopt] + dx + dx + HALF * ssq) + beta - bsum;
+            vlag[kopt] += +ONE;
 //
 //     If KNEW is zero initially, then pick the index of the interpolation
 //       point to be deleted, by maximizing the absolute value of the
 //       denominator of the updating formula times a weighting factor.
 //       
 //
-            if (KNEW == 0)
+            if (knew == 0)
             {
-                double DENMAX = ZERO;
-                for (int K = 1; K <= NPT; ++K)
+                double denmax = ZERO;
+                for (int k = 1; k <= npt; ++k)
                 {
-                    double HDIAG = ZERO;
-                    for (int J = 1; J <= NPTM; ++J)
+                    double hdiag = ZERO;
+                    for (int j = 1; j <= nptm; ++j)
                     {
-                        double TEMP = ONE;
-                        if (J < IDZ) TEMP = -ONE;
-                        HDIAG += TEMP * ZMAT[K, J] * ZMAT[K, J];
+                        double temp = ONE;
+                        if (j < idz) temp = -ONE;
+                        hdiag += temp * zmat[k, j] * zmat[k, j];
                     }
-                    double DENABS = Math.Abs(BETA * HDIAG + VLAG[K] * VLAG[K]);
-                    double DISTSQ = ZERO;
-                    for (int J = 1; J <= N; ++J)
-                        DISTSQ += Math.Pow(XPT[K, J] - XPT[KOPT, J], 2.0);
+                    double denabs = Math.Abs(beta * hdiag + vlag[k] * vlag[k]);
+                    double distsq = ZERO;
+                    for (int j = 1; j <= n; ++j)
+                        distsq += Math.Pow(xpt[k, j] - xpt[kopt, j], 2.0);
                     {
-                        double TEMP = DENABS * DISTSQ * DISTSQ;
-                        if (TEMP > DENMAX)
+                        double temp = denabs * distsq * distsq;
+                        if (temp > denmax)
                         {
-                            DENMAX = TEMP;
-                            KNEW = K;
+                            denmax = temp;
+                            knew = k;
                         }
                     }
                 }
@@ -2219,28 +2218,28 @@ namespace Cureos.Numerics.Optimizers
 //
 //     Apply the rotations that put zeros in the KNEW-th row of ZMAT.
 //
-            int JL = 1;
-            double TEMPA, TEMPB = ZERO;
-            if (NPTM >= 2)
+            int jl = 1;
+            double tempa, tempb = ZERO;
+            if (nptm >= 2)
             {
-                for (int J = 2; J <= NPTM; ++J)
+                for (int j = 2; j <= nptm; ++j)
                 {
-                    if (J == IDZ)
+                    if (j == idz)
                     {
-                        JL = IDZ;
+                        jl = idz;
                     }
-                    else if (ZMAT[KNEW, J] != ZERO)
+                    else if (zmat[knew, j] != ZERO)
                     {
-                        double TEMP = Math.Sqrt(ZMAT[KNEW, JL] * ZMAT[KNEW, JL] + ZMAT[KNEW, J] * ZMAT[KNEW, J]);
-                        TEMPA = ZMAT[KNEW, JL] / TEMP;
-                        TEMPB = ZMAT[KNEW, J] / TEMP;
-                        for (int I = 1; I <= NPT; ++I)
+                        double temp = Math.Sqrt(zmat[knew, jl] * zmat[knew, jl] + zmat[knew, j] * zmat[knew, j]);
+                        tempa = zmat[knew, jl] / temp;
+                        tempb = zmat[knew, j] / temp;
+                        for (int i = 1; i <= npt; ++i)
                         {
-                            TEMP = TEMPA * ZMAT[I, JL] + TEMPB * ZMAT[I, J];
-                            ZMAT[I, J] = TEMPA * ZMAT[I, J] - TEMPB * ZMAT[I, JL];
-                            ZMAT[I, JL] = TEMP;
+                            temp = tempa * zmat[i, jl] + tempb * zmat[i, j];
+                            zmat[i, j] = tempa * zmat[i, j] - tempb * zmat[i, jl];
+                            zmat[i, jl] = temp;
                         }
-                        ZMAT[KNEW, J] = ZERO;
+                        zmat[knew, j] = ZERO;
                     }
                 }
             }
@@ -2248,46 +2247,46 @@ namespace Cureos.Numerics.Optimizers
 //     Put the first NPT components of the KNEW-th column of the Z Z^T matrix
 //       into W, and calculate the parameters of the updating formula.
 //
-            TEMPA = ZMAT[KNEW, 1];
-            if (IDZ >= 2) TEMPA = -TEMPA;
-            if (JL > 1) TEMPB = ZMAT[KNEW, JL];
-            for (int I = 1; I <= NPT; ++I)
+            tempa = zmat[knew, 1];
+            if (idz >= 2) tempa = -tempa;
+            if (jl > 1) tempb = zmat[knew, jl];
+            for (int i = 1; i <= npt; ++i)
             {
-                W[I] = TEMPA * ZMAT[I, 1];
-                if (JL > 1) W[I] += TEMPB * ZMAT[I, JL];
+                w[i] = tempa * zmat[i, 1];
+                if (jl > 1) w[i] += tempb * zmat[i, jl];
             }
-            double ALPHA = W[KNEW];
-            double TAU = VLAG[KNEW];
-            double TAUSQ = TAU * TAU;
-            double DENOM = ALPHA * BETA + TAUSQ;
-            VLAG[KNEW] -= ONE;
-            if (DENOM == ZERO)
+            double alpha = w[knew];
+            double tau = vlag[knew];
+            double tausq = tau * tau;
+            double denom = alpha * beta + tausq;
+            vlag[knew] -= ONE;
+            if (denom == ZERO)
             {
-                KNEW = 0;
+                knew = 0;
                 return;
             }
-            double SQRTDN = Math.Sqrt(Math.Abs(DENOM));
+            double sqrtdn = Math.Sqrt(Math.Abs(denom));
 //
 //     Complete the updating of ZMAT when there is only one nonzero element
 //       in the KNEW-th row of the new matrix ZMAT. IFLAG is set to one when
 //       the value of IDZ is going to be reduced.
 //
-            int IFLAG = 0;
-            if (JL == 1)
+            int iflag = 0;
+            if (jl == 1)
             {
-                TEMPA = TAU / SQRTDN;
-                TEMPB = ZMAT[KNEW, 1] / SQRTDN;
-                for (int I = 1; I <= NPT; ++I)
-                    ZMAT[I, 1] = TEMPA * ZMAT[I, 1] - TEMPB * VLAG[I];
-                if (DENOM < ZERO)
+                tempa = tau / sqrtdn;
+                tempb = zmat[knew, 1] / sqrtdn;
+                for (int i = 1; i <= npt; ++i)
+                    zmat[i, 1] = tempa * zmat[i, 1] - tempb * vlag[i];
+                if (denom < ZERO)
                 {
-                    if (IDZ == 1)
+                    if (idz == 1)
                     {
-                        IDZ = 2;
+                        idz = 2;
                     }
                     else
                     {
-                        IFLAG = 1;
+                        iflag = 1;
                     }
                 }
             }
@@ -2296,29 +2295,29 @@ namespace Cureos.Numerics.Optimizers
 //
 //     Complete the updating of ZMAT in the alternative case.
 //
-                int JA = 1;
-                if (BETA >= ZERO) JA = JL;
-                int JB = JL + 1 - JA;
-                double TEMP = ZMAT[KNEW, JB] / DENOM;
-                TEMPA = TEMP * BETA;
-                TEMPB = TEMP * TAU;
-                TEMP = ZMAT[KNEW, JA];
-                double SCALA = ONE / Math.Sqrt(Math.Abs(BETA) * TEMP * TEMP + TAUSQ);
-                double SCALB = SCALA * SQRTDN;
-                for (int I = 1; I <= NPT; ++I)
+                int ja = 1;
+                if (beta >= ZERO) ja = jl;
+                int jb = jl + 1 - ja;
+                double temp = zmat[knew, jb] / denom;
+                tempa = temp * beta;
+                tempb = temp * tau;
+                temp = zmat[knew, ja];
+                double scala = ONE / Math.Sqrt(Math.Abs(beta) * temp * temp + tausq);
+                double scalb = scala * sqrtdn;
+                for (int i = 1; i <= npt; ++i)
                 {
-                    ZMAT[I, JA] = SCALA * (TAU * ZMAT[I, JA] - TEMP * VLAG[I]);
-                    ZMAT[I, JB] = SCALB * (ZMAT[I, JB] - TEMPA * W[I] - TEMPB * VLAG[I]);
+                    zmat[i, ja] = scala * (tau * zmat[i, ja] - temp * vlag[i]);
+                    zmat[i, jb] = scalb * (zmat[i, jb] - tempa * w[i] - tempb * vlag[i]);
                 }
-                if (DENOM <= ZERO)
+                if (denom <= ZERO)
                 {
-                    if (BETA < ZERO)
+                    if (beta < ZERO)
                     {
-                        IDZ = IDZ + 1;
+                        idz = idz + 1;
                     }
                     else
                     {
-                        IFLAG = 1;
+                        iflag = 1;
                     }
                 }
             }
@@ -2327,29 +2326,29 @@ namespace Cureos.Numerics.Optimizers
 //       ZMAT^T factorization gains another positive element. Then exchange
 //       the first and IDZ-th columns of ZMAT.
 //
-            if (IFLAG == 1)
+            if (iflag == 1)
             {
-                --IDZ;
-                for (int I = 1; I <= NPT; ++I)
+                --idz;
+                for (int i = 1; i <= npt; ++i)
                 {
-                    double TEMP = ZMAT[I, 1];
-                    ZMAT[I, 1] = ZMAT[I, IDZ];
-                    ZMAT[I, IDZ] = TEMP;
+                    double temp = zmat[i, 1];
+                    zmat[i, 1] = zmat[i, idz];
+                    zmat[i, idz] = temp;
                 }
             }
 //
 //     Finally, update the matrix BMAT.
 //
-            for (int J = 1; J <= N; ++J)
+            for (int j = 1; j <= n; ++j)
             {
-                int JP = NPT + J;
-                W[JP] = BMAT[KNEW, J];
-                TEMPA = (ALPHA * VLAG[JP] - TAU * W[JP]) / DENOM;
-                TEMPB = (-BETA * W[JP] - TAU * VLAG[JP]) / DENOM;
-                for (int I = 1; I <= JP; ++I)
+                int jp = npt + j;
+                w[jp] = bmat[knew, j];
+                tempa = (alpha * vlag[jp] - tau * w[jp]) / denom;
+                tempb = (-beta * w[jp] - tau * vlag[jp]) / denom;
+                for (int i = 1; i <= jp; ++i)
                 {
-                    BMAT[I, J] = BMAT[I, J] + TEMPA * VLAG[I] + TEMPB * W[I];
-                    if (I > NPT) BMAT[JP, I - NPT] = BMAT[I, J];
+                    bmat[i, j] = bmat[i, j] + tempa * vlag[i] + tempb * w[i];
+                    if (i > npt) bmat[jp, i - npt] = bmat[i, j];
                 }
             }
         }
@@ -2362,10 +2361,10 @@ namespace Cureos.Numerics.Optimizers
         private static string FORMAT<T>(string separator, string itemFormatter, IEnumerable<T> items, int start, int end)
         {
             return String.Join(separator,
-// ReSharper disable once FormatStringProblem
                 items.Skip(start).Take(end).Select(item => String.Format("{0," + itemFormatter + "}", item)));
         }
         // ReSharper restore SuggestUseVarKeywordEvident
+        // ReSharper restore InconsistentNaming
 
         #endregion
     }

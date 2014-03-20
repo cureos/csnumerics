@@ -39,6 +39,8 @@
     <AssemblyOriginatorKeyFile>csnumerics.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Optimizers\Bobyqa.cs" />
+    <Compile Include="Optimizers\Cobyla.cs" />
     <Compile Include="Optimizers\Lincoa.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -17,6 +17,11 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with CSNumerics.  If not, see <http://www.gnu.org/licenses/>.
+ *  
+ *  Remarks:
+ * 
+ *  The original Fortran 77 version of this code was developed by Michael Powell (mjdp@cam.ac.uk) and can be downloaded from this location:
+ *  http://plato.asu.edu/ftp/lincoa.zip
  */
 
 using System;

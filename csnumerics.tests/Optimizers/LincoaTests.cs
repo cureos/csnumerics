@@ -20,10 +20,9 @@
  */
 
 using System;
-using Cureos.Numerics.Optimizers;
 using NUnit.Framework;
 
-namespace Cureos.Numerics
+namespace Cureos.Numerics.Optimizers
 {
     [TestFixture]
     public class LincoaTests

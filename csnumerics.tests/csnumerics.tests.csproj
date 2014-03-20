@@ -43,7 +43,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LincoaTests.cs" />
+    <Compile Include="Optimizers\BobyqaTests.cs" />
+    <Compile Include="Optimizers\CobylaTests.cs" />
+    <Compile Include="Optimizers\LincoaTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

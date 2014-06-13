@@ -45,7 +45,7 @@ The linear constraint matrix *A* is in the C# implementation represented by the 
 To minimize the objective function subject to bounds, instantiate `Lincoa` and call the `FindMinimum` method:
 
     Lincoa optimizer = new Lincoa(LincoaObjectiveFunctionDelegate objective, double[,] a, double[] b);
-    OptimizationResult optimizer.FindMinimum(double[] x0);
+    OptimizationResult result = optimizer.FindMinimum(double[] x0);
 
 where `x0` is the initial variable array. 
 

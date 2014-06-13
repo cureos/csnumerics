@@ -123,7 +123,15 @@ namespace Cureos.Numerics
             const double rhoend = 1.0E-6;
             const int iprint = 1;
             const int maxfun = 10000;
-            var result = Lincoa.FindMinimum(PtsinTet, n, npt, m, a, b, x, rhobeg, rhoend, iprint, maxfun, Console.Out);
+
+            var lincoa = new Lincoa(PtsinTet, a, b) {
+                InterpolationConditions = npt,
+                TrustRegionRadiusStart = rhobeg,
+                TrustRegionRadiusEnd = rhoend,
+                MaximumFunctionCalls = maxfun,
+                PrintLevel = iprint,
+                Logger = Console.Out };
+            var result = lincoa.FindMinimum(x);
 
             const double expected = 2.761;
             var actual = result.F;

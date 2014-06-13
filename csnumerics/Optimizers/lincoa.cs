@@ -19,75 +19,52 @@
  *  along with CSNumerics.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-
 namespace Cureos.Numerics.Optimizers
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
 
     #region DELEGATES
 
-    internal delegate void LincoaCalfunDelegate(int n, double[] x, ref double f);
+    /// <summary>
+    /// Delegate for the LINCOA objective function formulation.
+    /// </summary>
+    /// <param name="n">Number of variables.</param>
+    /// <param name="x">Variable array.</param>
+    /// <param name="constraintsSatisfied">true if <paramref name="x"/> satisfies all constraints within workign accuract, false otherwise.</param>
+    /// <returns>Value of the objective function at <paramref name="x"/>.</returns>
+    public delegate double LincoaObjectiveFunctionDelegate(int n, double[] x, bool constraintsSatisfied);
 
     #endregion
 
-    public class Lincoa
+    /// <summary>
+    /// LINCOA, Derivative-free optimizer of nonlinear objective function with linear constraints.
+    /// </summary>
+    public class Lincoa : IPowellOptimizer
     {
-        #region INNER TYPES
-
 // ReSharper disable InconsistentNaming
-        public enum Status
-        {
-            Normal,
-            N_TooSmall,
-            NPT_OutOfRange,
-            MAXFUN_NotLargerThan_NPT,
-            ConstraintGradientIsZero,
-            MAXFUN_Reached,
-            X_RoundingErrorsPreventUpdate,
-            UpdatingFormulaDenominatorZero
-        }
 
-        public class Result
-        {
-            #region CONSTRUCTORS
+        #region DELEGATES
 
-            public Result(Status status, int nf, double f, double[] x)
-            {
-                Status = status;
-                Evals = nf;
-                F = f;
-                X = x;
-            }
+        private delegate void LincoaCalfunDelegate(int n, double[] x, ref double f);
 
-            #endregion
+        #endregion
 
-            #region PROPERTIES
-
-            public Status Status { get; private set; }
-
-            public int Evals { get; private set; }
-
-            public double F { get; private set; }
-
-            public double[] X { get; private set; }
-
-            #endregion
-        }
+        #region INNER TYPES
 
         private class LincoaCalfunAdapter
         {
             #region FIELDS
 
-            private readonly Func<int, double[], bool, double> _objective;
+            private readonly LincoaObjectiveFunctionDelegate _objective;
 
             #endregion
 
             #region CONSTRUCTORS
 
-            internal LincoaCalfunAdapter(Func<int, double[], bool, double> objective)
+            internal LincoaCalfunAdapter(LincoaObjectiveFunctionDelegate objective)
             {
                 _objective = objective;
             }
@@ -140,36 +117,157 @@ namespace Cureos.Numerics.Optimizers
 
         #endregion
 
-        #region METHODS
+        #region FIELDS
 
-        public static Result FindMinimum(Func<int, double[], bool, double> objective, int n, int npt, int m,
-            double[,] a, double[] b, double[] x, double rhobeg = 1.0, double rhoend = 1.0e-6, int iprint = 1,
-            int maxfun = 10000, TextWriter logger = null)
+        private readonly LincoaObjectiveFunctionDelegate _objective;
+
+        private readonly double[,] _a;
+        private readonly double[] _b;
+
+        private readonly int _n;
+        private readonly int _m;
+
+        private double _rhobeg;
+        private double _rhoend;
+
+        private int _npt;
+        private int _maxfun;
+        private int _iprint;
+
+        private TextWriter _logger;
+
+        #endregion
+
+        #region CONSTRUCTORS
+
+        /// <summary>
+        /// Initializes an instance of the LINCOA optimizer.
+        /// </summary>
+        /// <param name="n">Number of variables.</param>
+        /// <param name="m">Number of linear constraints.</param>
+        /// <param name="objective">Objective function subject to minimization.</param>
+        /// <param name="a">Linear constraints matrix.</param>
+        /// <param name="b">Linear constraints vector.</param>
+        public Lincoa(int n, int m, LincoaObjectiveFunctionDelegate objective, double[,] a, double[] b)
         {
-            var xx = new double[1 + n];
-            Array.Copy(x, 0, xx, 1, n);
+            _n = n;
+            _m = m;
+            _objective = objective;
 
-            var aa = new double[1 + n, 1 + m];
+            _a = new double[1 + n, 1 + m];
             for (var j = 0; j < m; ++j)
                 for (var i = 0; i < n; ++i)
-                    aa[1 + i, 1 + j] = a[j, i];
+                    _a[1 + i, 1 + j] = a[j, i];
 
-            var bb = new double[1 + m];
-            Array.Copy(b, 0, bb, 1, m);
+            _b = new double[1 + m];
+            Array.Copy(b, 0, _b, 1, m);
+
+            _npt = _n + 6;
+            _rhobeg = 1.0;
+            _rhoend = 1.0e-6;
+            _maxfun = 10000;
+            _iprint = 0;
+            _logger = null;
+        }
+
+        /// <summary>
+        /// Initializes an instance of the LINCOA optimizer, assuming that number of variables and constraints are given by the size of <paramref name="a"/>.
+        /// </summary>
+        /// <param name="n">Number of variables.</param>
+        /// <param name="m">Number of linear constraints.</param>
+        /// <param name="objective">Objective function subject to minimization.</param>
+        /// <param name="a">Linear constraints matrix.</param>
+        /// <param name="b">Linear constraints vector.</param>
+        public Lincoa(LincoaObjectiveFunctionDelegate objective, double[,] a, double[] b) 
+            : this(a.GetLength(1), a.GetLength(0), objective, a, b)
+        {
+        }
+
+        #endregion
+
+        #region PROPERTIES
+
+        /// <summary>
+        /// Gets or sets the number of interpolation conditions.
+        /// </summary>
+        public int InterpolationConditions
+        {
+            get { return _npt; }
+            set { _npt = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the start value of the trust region radius.
+        /// </summary>
+        public double TrustRegionRadiusStart
+        {
+            get { return _rhobeg; }
+            set { _rhobeg = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the final value of the trust region radius.
+        /// </summary>
+        public double TrustRegionRadiusEnd
+        {
+            get { return _rhoend; }
+            set { _rhoend = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the number of maximum function calls.
+        /// </summary>
+        public int MaximumFunctionCalls
+        {
+            get { return _maxfun; }
+            set { _maxfun = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the print level to the logger.
+        /// </summary>
+        public int PrintLevel {
+            get { return _iprint; }
+            set { _iprint = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the logger to which LINCOA log information should be sent.
+        /// </summary>
+        public TextWriter Logger
+        {
+            get { return _logger; }
+            set { _logger = value; }
+        }
+
+
+        #endregion
+
+        #region METHODS
+
+        /// <summary>
+        /// Find a local minimum of provided objective function satisfying the provided linear constraints.
+        /// </summary>
+        /// <param name="x0">Initial variable array.</param>
+        /// <returns>Summary of the optimization result.</returns>
+        public OptimizationSummary FindMinimum(double[] x0)
+        {
+            var x = new double[1 + _n];
+            Array.Copy(x0, 0, x, 1, _n);
 
             double f;
             int nf;
-            var calfun = new LincoaCalfunDelegate(new LincoaCalfunAdapter(objective).CALFUN);
-            var status = LINCOA(calfun, n, npt, m, aa, bb, xx, rhobeg, rhoend, iprint, maxfun, out f, out nf, logger);
+            var calfun = new LincoaCalfunDelegate(new LincoaCalfunAdapter(_objective).CALFUN);
+            var status = LINCOA(calfun, _n, _npt, _m, _a, _b, x, _rhobeg, _rhoend, _iprint, _maxfun, out f, out nf, _logger);
 
-            var xopt = new double[n];
-            Array.Copy(xx, 1, xopt, 0, n);
+            var xopt = new double[_n];
+            Array.Copy(x, 1, xopt, 0, _n);
 
-            return new Result(status, nf, f, xopt);
+            return new OptimizationSummary(status, nf, f, xopt);
         }
 
 // ReSharper disable SuggestUseVarKeywordEvident
-        private static Status LINCOA(LincoaCalfunDelegate calfun, int n, int npt, int m, double[,] a, double[] b,
+        private static OptimizationStatus LINCOA(LincoaCalfunDelegate calfun, int n, int npt, int m, double[,] a, double[] b,
             double[] x, double rhobeg, double rhoend, int iprint, int maxfun, out double f, out int nf, TextWriter logger)
         {
             f = Double.MaxValue;
@@ -239,17 +337,17 @@ namespace Cureos.Numerics.Optimizers
             if (n <= 1)
             {
                 PRINT(logger, LINCOA_10);
-                return Status.N_TooSmall;
+                return OptimizationStatus.N_TooSmall;
             }
             if (npt < n + 2 || npt > ((n + 2) * np) / 2)
             {
                 PRINT(logger, LINCOA_20);
-                return Status.NPT_OutOfRange;
+                return OptimizationStatus.NPT_OutOfRange;
             }
             if (maxfun <= npt)
             {
                 PRINT(logger, LINCOA_30);
-                return Status.MAXFUN_NotLargerThan_NPT;
+                return OptimizationStatus.MAXFUN_NotLargerThan_NPT;
             }
 //
 //     Normalize the constraints, and copy the resultant constraint matrix
@@ -273,7 +371,7 @@ namespace Cureos.Numerics.Optimizers
                     if (temp == ZERO)
                     {
                         PRINT(logger, LINCOA_50);
-                        return Status.ConstraintGradientIsZero;
+                        return OptimizationStatus.ConstraintGradientIsZero;
                     }
                     temp = Math.Sqrt(temp);
                     if (sum - b[j] > smallx * temp) iflag = 1;
@@ -291,10 +389,10 @@ namespace Cureos.Numerics.Optimizers
             return LINCOB(calfun, n, npt, m, amat, bnorm, x, rhobeg, rhoend, iprint, maxfun, out f, out nf, logger);
         }
 
-        private static Status LINCOB(LincoaCalfunDelegate calfun, int n, int npt, int m, double[,] amat, double[] b,
+        private static OptimizationStatus LINCOB(LincoaCalfunDelegate calfun, int n, int npt, int m, double[,] amat, double[] b,
             double[] x, double rhobeg, double rhoend, int iprint, int maxfun, out double f, out int nf, TextWriter logger)
         {
-            Status? status = null;
+            OptimizationStatus? status = null;
 //
 //     The arguments N, NPT, M, X, RHOBEG, RHOEND, IPRINT and MAXFUN are
 //       identical to the corresponding arguments in SUBROUTINE LINCOA.
@@ -614,7 +712,7 @@ namespace Cureos.Numerics.Optimizers
             {
                 --nf;
                 if (iprint > 0) PRINT(logger, LINCOB_230);
-                status = Status.MAXFUN_Reached;
+                status = OptimizationStatus.MAXFUN_Reached;
                 goto LINCOB_600;
             }
             double xdiff = ZERO;
@@ -630,7 +728,7 @@ namespace Cureos.Numerics.Optimizers
             {
                 ifeas = 0;
                 if (iprint > 0) PRINT(logger, LINCOB_250);
-                status = Status.X_RoundingErrorsPreventUpdate;
+                status = OptimizationStatus.X_RoundingErrorsPreventUpdate;
                 goto LINCOB_600;
             }
             if (ksave <= 0) ifeas = 1;
@@ -709,7 +807,7 @@ namespace Cureos.Numerics.Optimizers
             if (knew == 0)
             {
                 if (iprint > 0) PRINT(logger, LINCOB_320);
-                status = Status.UpdatingFormulaDenominatorZero;
+                status = OptimizationStatus.UpdatingFormulaDenominatorZero;
                 goto LINCOB_600;
             }
 //
@@ -965,7 +1063,7 @@ namespace Cureos.Numerics.Optimizers
                 PRINT(logger, LINCOB_590, f, FORMAT("  ", "15:E6", x, 1, n));
             }
 
-            return status.GetValueOrDefault(Status.Normal);
+            return status.GetValueOrDefault(OptimizationStatus.Normal);
         }
 
         private static double GETACT(int n, int m, double[,] amat, ref int nact, int[] iact, double[,] qfac,

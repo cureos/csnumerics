@@ -13,7 +13,8 @@ The *CSNumerics* assembly is immediately applicable with the following targets:
 
 * .NET Framework 4 and later
 * Windows Store apps (Windows 8 and later)
-* Windows Phone 8
+* Windows Phone Silverlight 8 and 8.1
+* Windows Phone 8.1
 * Silverlight 5
 * Xamarin.iOS
 * Xamarin.Android
@@ -41,25 +42,25 @@ The method should return the calculated objective function value.
 
 The linear constraint matrix *A* is in the C# implementation represented by the multidimensional array `a`, with a size equal to or larger than `[m, n]`. The constraint vector *B* is represented by the array `b` with size at least `m`.
 
-To minimize the objective function subject to bounds, call the static _Lincoa.FindMinimum_ method:
+To minimize the objective function subject to bounds, instantiate `Lincoa` and call the `FindMinimum` method:
 
-    Lincoa.Result Lincoa.FindMinimum(Func<int, double[], bool, double> objective, int n, int npt, int m,
-            double[,] a, double[] b, double[] x, double rhobeg, double rhoend, int iprint, int maxfun, 
-			TextWriter logger)
+    Lincoa optimizer = new Lincoa(LincoaObjectiveFunctionDelegate objective, double[,] a, double[] b);
+    OptimizationResult optimizer.FindMinimum(double[] x0);
 
-where `x` on input is the initial variable array, `n` is the number of variables in `x`, `npt` is the number
-of interpolation conditions (recommended value `2 * n + 1`), `m` is the number of linear constraints specified in detail by `a` and `b`, `rhobeg` and `rhoend` 
-are initial and final values of a trust region radius, `iprint` (0..3) specifies the level of output, `maxfun` is the maximum allowed number of function evaluations, 
-and _logger_ is a text writer to where *LINCOA*'s log will be output. 
+where `x0` is the initial variable array. 
 
-The method returns the result as an `Lincoa.Result` object containing:
+You may additionally set `Lincoa` properties `InterpolationConditions` (recommended value `2 * n + 1` where `n` is the number of variables in `x`),
+`TrustRegionRadiusStart` and `TrustRegionRadiusEnd`, `MaximumFunctionCalls` which is the maximum allowed number of function evaluations, 
+`PrintLevel` (0..3) which specifies the level of output, and `Logger` which is a text writer to where *LINCOA*'s log will be output. 
 
-    Lincoa.Status Status   /* Optimization status upon exit from LINCOA */
-	int           Evals    /* Total number of function evaluations */
-	double        F        /* Optimal value of the objective function
-	double[]      X        /* Optimal values of the optimization variables */
+The method returns the result as an `OptimizationResult` object containing:
 
-The `FindMinimum` method implements default values as follows: `rhobeg = 1.0`, `rhoend = 1.0e-6`, `iprint = 1`, `maxfun = 10000` and `logger = null`. 
+    OptimizationStatus Status   /* Optimization status upon exit from LINCOA */
+	int                Evals    /* Total number of function evaluations */
+	double             F        /* Optimal value of the objective function
+	double[]           X        /* Optimal values of the optimization variables */
+
+Upon instantiation, `Lincoa` applies these default values as follows: `TrustRegionRadiusStart = 1.0`, `TrustRegionRadiusEnd = 1.0e-6`, `MaximumFunctionCalls = 10000`, `PrintLevel = 1` and `Logger = null`. 
 
 #### Fortran 77 README excerpt
 

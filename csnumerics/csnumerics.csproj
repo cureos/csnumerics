@@ -11,7 +11,7 @@
     <RootNamespace>Cureos.Numerics</RootNamespace>
     <AssemblyName>CSNumerics</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Profile136</TargetFrameworkProfile>
+    <TargetFrameworkProfile>Profile328</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
   </PropertyGroup>
@@ -39,9 +39,11 @@
     <AssemblyOriginatorKeyFile>csnumerics.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Optimizers\Bobyqa.cs" />
-    <Compile Include="Optimizers\Cobyla.cs" />
+    <Compile Include="Optimizers\IOptimizer.cs" />
+    <Compile Include="Optimizers\IPowellOptimizer.cs" />
     <Compile Include="Optimizers\Lincoa.cs" />
+    <Compile Include="Optimizers\OptimizationStatus.cs" />
+    <Compile Include="Optimizers\OptimizationSummary.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

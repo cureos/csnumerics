@@ -20,9 +20,10 @@
  */
 
 using System;
+using Cureos.Numerics.Optimizers;
 using NUnit.Framework;
 
-namespace Cureos.Numerics.Optimizers
+namespace Cureos.Numerics
 {
     [TestFixture]
     public class LincoaTests
@@ -35,10 +36,10 @@ namespace Cureos.Numerics.Optimizers
 
         #region Unit tests
 
-        [TestCase(15)]
-        [TestCase(30)]
-        [TestCase(45)]
-        public void FindMinimum_PtsinTet_YieldsExpectedValue(int npt)
+        [TestCase(15, 0.001)]
+        [TestCase(30, 0.001)]
+        [TestCase(45, 0.001)]
+        public void FindMinimum_PtsinTet_YieldsExpectedValue(int npt, double tol)
         {
             //     Set some constants.
             const int n = 12;
@@ -122,11 +123,21 @@ namespace Cureos.Numerics.Optimizers
             const double rhoend = 1.0E-6;
             const int iprint = 1;
             const int maxfun = 10000;
-            var result = Lincoa.FindMinimum(PtsinTet, n, npt, m, a, b, x, rhobeg, rhoend, iprint, maxfun, Console.Out);
+
+            var lincoa = new Lincoa(PtsinTet, a, b)
+                             {
+                                 InterpolationConditions = npt,
+                                 TrustRegionRadiusStart = rhobeg,
+                                 TrustRegionRadiusEnd = rhoend,
+                                 MaximumFunctionCalls = maxfun,
+                                 PrintLevel = iprint,
+                                 Logger = Console.Out
+                             };
+            var result = lincoa.FindMinimum(x);
 
             const double expected = 2.761;
             var actual = result.F;
-            Assert.AreEqual(expected, actual, 0.001);
+            Assert.AreEqual(expected, actual, tol);
         }
 
         public double PtsinTet(int n, double[] x, bool isXFeasible)

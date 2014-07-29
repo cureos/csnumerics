@@ -24,6 +24,8 @@ The *CSNumerics* assembly is immediately applicable with the following targets:
 * Xamarin.iOS
 * Xamarin.Android
 
+Use *NuGet* to include [CSNumerics](https://www.nuget.org/packages/csnumerics) in your application.
+
 
 ## Notes on commercial use
 

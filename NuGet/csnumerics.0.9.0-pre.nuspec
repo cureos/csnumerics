@@ -5,9 +5,9 @@
         <version>0.9.0-pre</version>
         <title>CSNumerics</title>
         <authors>Anders Gustafsson,Cureos AB</authors>
-        <licenseUrl>https://github.com/cureos/csnumerics/blob/master/NuGet/LICENSE.txt</licenseUrl>
+        <licenseUrl>https://raw.githubusercontent.com/cureos/csnumerics/master/NuGet/LICENSE.txt</licenseUrl>
         <projectUrl>https://github.com/cureos/csnumerics</projectUrl>
-        <iconUrl>https://github.com/cureos/csnumerics/blob/master/NuGet/csnumerics.png</iconUrl>
+        <iconUrl>https://raw.githubusercontent.com/cureos/csnumerics/master/NuGet/csnumerics.png</iconUrl>
         <requireLicenseAcceptance>true</requireLicenseAcceptance>
         <description>CSNumerics is a Portable Class Library  of various numerical algorithms written in C#.
 

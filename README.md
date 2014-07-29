@@ -1,3 +1,5 @@
+<img src="NuGet/csnumerics.png" alt="CSNumerics logo" height="72" />
+
 # CSNumerics
 
 <b>Portable numerical algorithms in C#</b>

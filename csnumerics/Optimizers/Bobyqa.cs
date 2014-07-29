@@ -20,7 +20,8 @@
  * 
  *  Remarks:
  * 
- *  The original Fortran 77 version of this code was developed by Michael Powell (mjdp@cam.ac.uk) and can be downloaded from this location: 
+ *  The original Fortran 77 version of this code was developed by 
+ *  Michael Powell (mjdp@cam.ac.uk) and can be downloaded from this location: 
  *  http://plato.asu.edu/ftp/other_software/bobyqa.zip
  */
 
@@ -29,22 +30,23 @@ using System.IO;
 
 namespace Cureos.Numerics.Optimizers
 {
+    // ReSharper disable InconsistentNaming
+
+    #region DELEGATES
+
+    /// <summary>
+    /// Delegate for the COBYLA objective function formulation.
+    /// </summary>
+    /// <param name="n">Number of variables.</param>
+    /// <param name="x">Variable array.</param>
+    /// <returns>Value of the objective function at <paramref name="x"/>.</returns>
+    public delegate double BobyqaObjectiveFunctionDelegate(int n, double[] x);
+
+    #endregion
+
     /// <summary>
     /// Representation of supported exit statuses from the Bobyqa algorithm.
     /// </summary>
-    public enum BobyqaExitStatus
-    {
-        TooFewVariables,
-        VariableBoundsArrayTooShort,
-        InvalidBoundsSpecification,
-        Normal,
-        InvalidInterpolationConditionNumber,
-        BoundsRangeTooSmall,
-        DenominatorCancellation,
-        TrustRegionStepReductionFailure,
-        MaximumIterationsReached
-    }
-
     /// <summary>
     /// C# implementation of Powell’s nonlinear derivative–free bound constrained optimization that uses a quadratic 
     /// approximation approach. The algorithm applies a trust region method that forms quadratic models by interpolation. 
@@ -52,9 +54,24 @@ namespace Cureos.Numerics.Optimizers
     /// of the change to the second derivative of the model, beginning with the zero matrix. 
     /// The values of the variables are constrained by upper and lower bounds.
     /// </summary>
-    public static class Bobyqa
+    public class Bobyqa : IPowellOptimizer
     {
         #region FIELDS
+
+        private readonly int _n;
+        private readonly BobyqaObjectiveFunctionDelegate _calfun;
+
+        private readonly double[] _xl;
+        private readonly double[] _xu;
+        
+        private int _npt;
+        private int _maxfun;
+        private int _iprint;
+
+        private double _rhoend;
+        private double _rhobeg;
+
+        private TextWriter _logger;
 
         private const double INF = 1.0e60;
         private const double INFMIN = -1.0e60;
@@ -82,119 +99,217 @@ namespace Cureos.Numerics.Optimizers
 
         #endregion
 
-        #region PUBLIC METHODS
+        #region CONSTRUCTORS
 
         /// <summary>
-        /// Find a (local) minimum of the objective function <paramref name="calfun"/>, potentially subject to variable
+        /// Constructor for finding a (local) minimum of the objective function <paramref name="calfun"/>, potentially subject to variable
         /// bounds <paramref name="xl"/> and <paramref name="xu"/>.
         /// </summary>
         /// <param name="calfun">Objective function subject to minimization.</param>
         /// <param name="n">Number of optimization variables, must be at least two.</param>
-        /// <param name="x">On entry, initial estimates of the variables. On exit, optimized variable values corresponding
-        /// to the minimization of <paramref name="calfun"/>. The variable array is zero-based.</param>
         /// <param name="xl">Lower bounds on the variables. Array is zero-based. If set to null, all variables
         /// are treated as downwards unbounded.</param>
         /// <param name="xu">Upper bounds on the variables. Array is zero-based. If set to null, all variables
         /// are treated as upwards unbounded.</param>
-        /// <param name="npt">Number of interpolation conditions. Its value must be in the interval [N+2,(N+1)(N+2)/2]. 
-        /// Choices that exceed 2*N+1 are not recommended.</param>
-        /// <param name="rhobeg">Initial value of a trust region radius, must be positive and greater than <paramref name="rhoend"/>.
-        /// Typically, value should be about one tenth of the greatest expected change to a variable.</param>
-        /// <param name="rhoend">Final values of a trust region radius, must be positive and less than <paramref name="rhobeg"/>.
-        /// Indicate the accuracy that is required in the final values of the variables.</param>
-        /// <param name="iprint">Should be set to 0, 1, 2 or 3, to control the amount of printing. Specifically, there is 
-        /// no output for 0 and there is output only at the return for 1. Otherwise, each new value of RHO is printed, 
-        /// with the best vector of variables so far and the corresponding value of the objective function. Further, each new
-        /// value of the objective function with its variables are output for value 3.</param>
-        /// <param name="maxfun">Maximum number of objective function evaluations.</param>
-        /// <param name="logger">If defined, text writer to which log output should be directed.</param>
-        /// <returns>Exit status of the objective function minimization.</returns>
         /// <remarks>The construction of quadratic models requires <paramref name="xl"/> to be strictly less than 
         /// <paramref name="xu"/> for each index I. Further, the contribution to a model from changes to the I-th variable is
         /// damaged severely by rounding errors if difference between upper and lower bound is too small.</remarks>
-        public static BobyqaExitStatus FindMinimum(Func<int, double[], double> calfun, int n, double[] x, double[] xl = null, 
-            double[] xu = null, int npt = -1, double rhobeg = -1.0, double rhoend = -1.0, int iprint = 1, int maxfun = 10000,
-            TextWriter logger = null)
+        public Bobyqa(int n, BobyqaObjectiveFunctionDelegate calfun, double[] xl = null, double[] xu = null)
+        {
+            _n = n;
+            _calfun = calfun;
+            _xl = xl;
+            _xu = xu;
+
+            _npt = -1;
+            _rhobeg = -1.0;
+            _rhoend = -1.0;
+            _iprint = 1;
+            _maxfun = 10000;
+            _logger = null;
+        }
+
+        #endregion
+
+        #region PROPERTIES
+
+        /// <summary>
+        /// Gets or sets the number of maximum function calls.
+        /// </summary>
+        public int MaximumFunctionCalls
+        {
+            get
+            {
+                return this._maxfun;
+            }
+            set
+            {
+                this._maxfun = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the print level to the logger.
+        /// </summary>
+        public int PrintLevel
+        {
+            get
+            {
+                return this._iprint;
+            }
+            set
+            {
+                this._iprint = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the logger to which the optimizer log information should be sent.
+        /// </summary>
+        public TextWriter Logger
+        {
+            get
+            {
+                return this._logger;
+            }
+            set
+            {
+                this._logger = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the number of interpolation conditions.
+        /// </summary>
+        public int InterpolationConditions
+        {
+            get
+            {
+                return this._npt;
+            }
+            set
+            {
+                this._npt = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the final value of the trust region radius.
+        /// </summary>
+        public double TrustRegionRadiusEnd
+        {
+            get
+            {
+                return this._rhoend;
+            }
+            set
+            {
+                this._rhoend = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the start value of the trust region radius.
+        /// </summary>
+        public double TrustRegionRadiusStart
+        {
+            get
+            {
+                return this._rhobeg;
+            }
+            set
+            {
+                this._rhobeg = value;
+            }
+        }
+
+        #endregion
+
+        #region METHODS
+
+        /// <summary>
+        /// Find a local minimum of provided objective function satisfying the provided linear constraints.
+        /// </summary>
+        /// <param name="x0">Initial variable array.</param>
+        /// <returns>Summary of the optimization result.</returns>
+        public OptimizationSummary FindMinimum(double[] x0)
         {
             // Verify that the number of variables is greater than 1; BOBYQA does not support 1-D optimization.
-            if (n < 2) return BobyqaExitStatus.TooFewVariables;
+            if (_n < 2) return new OptimizationSummary(OptimizationStatus.N_TooSmall, 0, Double.NaN, null);
 
             // Verify that the number of variables, and bounds if defined, in the respective array is sufficient.
-            if (x.Length < n || (xl != null && xl.Length < n) || (xu != null && xu.Length < n))
+            if (x0.Length < _n || (_xl != null && _xl.Length < _n) || (_xu != null && _xu.Length < _n))
             {
-                return BobyqaExitStatus.VariableBoundsArrayTooShort;
+                return new OptimizationSummary(OptimizationStatus.VariableBoundsArrayTooShort, 0, Double.NaN, null);
             }
 
             // C# arrays are zero-based, whereas BOBYQA methods expect one-based arrays. Therefore define internal matrices
             // to be dispatched to the private BOBYQA methods.
-            var ix = new double[1 + n];
-            Array.Copy(x, 0, ix, 1, n);
+            var xx0 = new double[1 + _n];
+            Array.Copy(x0, 0, xx0, 1, _n);
 
             // If xl and/or xu are null, this is interpreted as that the optimization variables are all unbounded downwards and/or upwards.
             // In that case, assign artificial +/- infinity values to the bounds array(s).
-            var ixl = new double[1 + n];
-            if (xl == null)
-                for (var i = 1; i <= n; ++i) ixl[i] = INFMIN;
+            var xl = new double[1 + _n];
+            if (_xl == null)
+                for (var i = 1; i <= _n; ++i) xl[i] = INFMIN;
             else
-                Array.Copy(xl, 0, ixl, 1, n);
+                Array.Copy(_xl, 0, xl, 1, _n);
 
-            var ixu = new double[1 + n];
-            if (xu == null)
-                for (var i = 1; i <= n; ++i) ixu[i] = INF;
+            var xu = new double[1 + _n];
+            if (_xu == null)
+                for (var i = 1; i <= _n; ++i) xu[i] = INF;
             else
-                Array.Copy(xu, 0, ixu, 1, n);
+                Array.Copy(_xu, 0, xu, 1, _n);
 
             // Verify that all lower bounds are less than upper bounds.
             // If any start value is outside bounds, adjust this value to be within bounds.
-            var rng = new double[1 + n];
+            var rng = new double[1 + _n];
             var minrng = Double.MaxValue;
             var maxabsx = 0.0;
 
-            for (var i = 1; i <= n; ++i)
+            for (var i = 1; i <= _n; ++i)
             {
-                if ((rng[i] = ixu[i] - ixl[i]) <= 0.0)
-                    return BobyqaExitStatus.InvalidBoundsSpecification;
+                if ((rng[i] = xu[i] - xl[i]) <= 0.0)
+                    return new OptimizationSummary(OptimizationStatus.InvalidBoundsSpecification, 0, Double.NaN, null);
                 minrng = Math.Min(rng[i], minrng);
 
-                if (ix[i] < ixl[i]) ix[i] = ixl[i];
-                if (ix[i] > ixu[i]) ix[i] = ixu[i];
-                maxabsx = Math.Max(Math.Abs(ix[i]), maxabsx);
+                if (xx0[i] < xl[i]) xx0[i] = xl[i];
+                if (xx0[i] > xu[i]) xx0[i] = xu[i];
+                maxabsx = Math.Max(Math.Abs(xx0[i]), maxabsx);
             }
-            
+
             // If rhobeg is non-positive, set rhobeg based on the absolute values of the variables' start values,
             // using same strategy as R-project BOBYQA wrapper.
-            if (rhobeg <= 0.0) rhobeg = maxabsx > 0.0 ? Math.Min(0.95, 0.2 * maxabsx) : 0.95;
+            if (_rhobeg <= 0.0) _rhobeg = maxabsx > 0.0 ? Math.Min(0.95, 0.2 * maxabsx) : 0.95;
 
             // Required that rhobeg is less than half the minimum bounds range; adjust rhobeg if necessary.
-            if (rhobeg > 0.5 * minrng) rhobeg = 0.2 * minrng;
+            if (_rhobeg > 0.5 * minrng) _rhobeg = 0.2 * minrng;
 
             // If rhoend is non-negative, set rhoend to one millionth of the rhobeg value (R-project strategy).
-            if (rhoend <= 0.0) rhoend = 1.0e-6 * rhobeg;
+            if (_rhoend <= 0.0) _rhoend = 1.0e-6 * _rhobeg;
 
             // If npt is non-positive, apply default value 2 * n + 1.
-            var inpt = npt > 0 ? npt : 2 * n + 1;
+            var inpt = _npt > 0 ? _npt : 2 * _n + 1;
 
             // Define internal calfun to account for that the x vector in the function invocation is one-based.
-            var icalfun = new Func<int, double[], double>((nn, ixx) =>
-                                                              {
-                                                                  var xx = new double[n];
-                                                                  Array.Copy(ixx, 1, xx, 0, n);
-                                                                  return calfun(nn, xx);
-                                                              });
+            var icalfun = new Func<int, double[], double>((n, x) =>
+            {
+                var xx = new double[_n];
+                Array.Copy(x, 1, xx, 0, _n);
+                return _calfun(n, xx);
+            });
 
             // Invoke optimization. After completed optimization, transfer the optimized internal variable array to the
             // variable array in the method call.
-            var status = BOBYQA(icalfun, n, inpt, ix, ixl, ixu, rhobeg, rhoend, iprint, maxfun, logger);
-            Array.Copy(ix, 1, x, 0, n);
-
-            return status;
+            return BOBYQA(icalfun, _n, inpt, xx0, xl, xu, _rhobeg, _rhoend, _iprint, _maxfun, _logger);
         }
 
         #endregion
 
         #region PRIVATE BOBYQA ALGORITHM METHODS
 
-        private static BobyqaExitStatus BOBYQA(Func<int, double[], double> calfun, int n, int npt, double[] x,
+        private static OptimizationSummary BOBYQA(Func<int, double[], double> calfun, int n, int npt, double[] x,
             double[] xl, double[] xu, double rhobeg, double rhoend, int iprint, int maxfun, TextWriter logger)
         {
             //     This subroutine seeks the least value of a function of many variables,
@@ -242,7 +357,7 @@ namespace Cureos.Numerics.Optimizers
             if (npt < n + 2 || npt > ((n + 2) * np) / 2)
             {
                 if (logger != null) logger.WriteLine(InvalidNptText);
-                return BobyqaExitStatus.InvalidInterpolationConditionNumber;
+                return new OptimizationSummary(OptimizationStatus.NPT_OutOfRange, 0, Double.NaN, null);
             }
 
             var ndim = npt + n;
@@ -263,7 +378,7 @@ namespace Cureos.Numerics.Optimizers
                 if (temp < rhobeg + rhobeg)
                 {
                     if (logger != null) logger.WriteLine(TooSmallBoundRangeText);
-                    return BobyqaExitStatus.BoundsRangeTooSmall;
+                    return new OptimizationSummary(OptimizationStatus.BoundsRangeTooSmall, 0, Double.NaN, null);
                 }
                 sl[j] = xl[j] - x[j];
                 su[j] = xu[j] - x[j];
@@ -303,7 +418,7 @@ namespace Cureos.Numerics.Optimizers
             return BOBYQB(calfun, n, npt, x, xl, xu, rhobeg, rhoend, iprint, maxfun, ndim, sl, su, logger);
         }
 
-        private static BobyqaExitStatus BOBYQB(Func<int, double[], double> calfun, int n, int npt, double[] x, double[] xl,
+        private static OptimizationSummary BOBYQB(Func<int, double[], double> calfun, int n, int npt, double[] x, double[] xl,
             double[] xu, double rhobeg, double rhoend, int iprint, int maxfun, int ndim, double[] sl, double[] su,
             TextWriter logger)
         {
@@ -374,7 +489,7 @@ namespace Cureos.Numerics.Optimizers
             var f = 0.0;
 
             double distsq;
-            BobyqaExitStatus status;
+            OptimizationStatus status;
 
             //     The call of PRELIM sets the elements of XBASE, XPT, FVAL, GOPT, HQ, PQ,
             //     BMAT and ZMAT for the first iteration, with the corresponding values of
@@ -397,7 +512,7 @@ namespace Cureos.Numerics.Optimizers
             if (nf < npt)
             {
                 if (iprint > 0 && logger != null) logger.WriteLine(MaxIterationsText);
-                status = BobyqaExitStatus.MaximumIterationsReached;
+                status = OptimizationStatus.MAXFUN_Reached;
                 goto L_720;
             }
             var kbase = 1;
@@ -608,7 +723,7 @@ namespace Cureos.Numerics.Optimizers
             {
                 nf = maxfun;
                 if (iprint > 0 && logger != null) logger.WriteLine(MaxIterationsText);
-                status = BobyqaExitStatus.MaximumIterationsReached;
+                status = OptimizationStatus.MAXFUN_Reached;
                 goto L_720;
             }
             nresc = nf;
@@ -702,7 +817,7 @@ namespace Cureos.Numerics.Optimizers
                 {
                     if (nf > nresc) goto L_190;
                     if (iprint > 0 && logger != null) logger.WriteLine(DenominatorCancellationText);
-                    status = BobyqaExitStatus.DenominatorCancellation;
+                    status = OptimizationStatus.DenominatorCancellation;
                     goto L_720;
                 }
             }
@@ -740,7 +855,7 @@ namespace Cureos.Numerics.Optimizers
                 {
                     if (nf > nresc) goto L_190;
                     if (iprint > 0 && logger != null) logger.WriteLine(DenominatorCancellationText);
-                    status = BobyqaExitStatus.DenominatorCancellation;
+                    status = OptimizationStatus.DenominatorCancellation;
                     goto L_720;
                 }
             }
@@ -761,18 +876,18 @@ namespace Cureos.Numerics.Optimizers
             if (nf >= maxfun)
             {
                 if (iprint > 0 && logger != null) logger.WriteLine(MaxIterationsText);
-                status = BobyqaExitStatus.MaximumIterationsReached;
+                status = OptimizationStatus.MAXFUN_Reached;
                 goto L_720;
             }
 
             ++nf;
             f = calfun(n, x);
 
-            if (iprint == 3 && logger != null) logger.WriteLine(IterationOutputFormat, nf, f, x.ToString(n));
+            if (iprint == 3 && logger != null) logger.WriteLine(IterationOutputFormat, nf, f, ToString(x, n));
             if (ntrits == -1)
             {
                 fsave = f;
-                status = BobyqaExitStatus.Normal;
+                status = OptimizationStatus.Normal;
                 goto L_720;
             }
 
@@ -805,7 +920,7 @@ namespace Cureos.Numerics.Optimizers
                 if (vquad >= ZERO)
                 {
                     if (iprint > 0 && logger != null) logger.WriteLine(TrustRegionStepFailureText);
-                    status = BobyqaExitStatus.TrustRegionStepReductionFailure;
+                    status = OptimizationStatus.TrustRegionStepReductionFailure;
                     goto L_720;
                 }
                 ratio = (f - fopt) / vquad;
@@ -1058,7 +1173,7 @@ namespace Cureos.Numerics.Optimizers
                     if (logger != null)
                     {
                         logger.WriteLine(RhoUpdatedFormat, rho, nf);
-                        logger.WriteLine(StageCompleteOutputFormat, fval[kopt], bestX.ToString(n));
+                        logger.WriteLine(StageCompleteOutputFormat, fval[kopt], ToString(bestX, n));
                     }
                 }
                 ntrits = 0;
@@ -1070,7 +1185,7 @@ namespace Cureos.Numerics.Optimizers
             //       it is too short to have been tried before.
 
             if (ntrits == -1) goto L_360;
-            status = BobyqaExitStatus.Normal;
+            status = OptimizationStatus.Normal;
 
             L_720:
             if (fval[kopt] <= fsave)
@@ -1086,9 +1201,13 @@ namespace Cureos.Numerics.Optimizers
             if (iprint >= 1 && logger != null)
             {
                 logger.WriteLine(FinalNumberEvaluationsFormat, nf);
-                logger.WriteLine(StageCompleteOutputFormat, f, x.ToString(n));
+                logger.WriteLine(StageCompleteOutputFormat, f, ToString(x, n));
             }
-            return status;
+
+            var xret = new double[n];
+            Array.Copy(x, 1, xret, 0, n);
+
+            return new OptimizationSummary(status, nf, f, xret);
         }
 
         private static void ALTMOV(int n, int npt, double[,] xpt, double[] xopt, double[,] bmat,
@@ -1543,7 +1662,7 @@ namespace Cureos.Numerics.Optimizers
                 }
 
                 var f = calfun(n, x);
-                if (iprint == 3 && logger != null) logger.WriteLine(IterationOutputFormat, nf, f, x.ToString(n));
+                if (iprint == 3 && logger != null) logger.WriteLine(IterationOutputFormat, nf, f, ToString(x, n));
                 fval[nf] = f;
                 if (nf == 1)
                 {
@@ -2002,7 +2121,7 @@ namespace Cureos.Numerics.Optimizers
 
                 ++nf;
                 var f = calfun(n, w);
-                if (iprint == 3 && logger != null) logger.WriteLine(IterationOutputFormat, nf, f, w.ToString(n));
+                if (iprint == 3 && logger != null) logger.WriteLine(IterationOutputFormat, nf, f, ToString(w, n));
 
                 fval[kpt] = f;
                 if (f < fval[kopt]) kopt = kpt;
@@ -2569,7 +2688,7 @@ namespace Cureos.Numerics.Optimizers
 
         #region PRIVATE SUPPORT METHODS
 
-        private static string ToString(this double[] x, int n)
+        private static string ToString(double[] x, int n)
         {
             var xstr = new string[n];
             for (var i = 0; i < n; ++i) xstr[i] = String.Format("{0,13:F6}", x[1 + i]);
@@ -2578,4 +2697,6 @@ namespace Cureos.Numerics.Optimizers
 
         #endregion
     }
+
+    // ReSharper restore InconsistentNaming
 }

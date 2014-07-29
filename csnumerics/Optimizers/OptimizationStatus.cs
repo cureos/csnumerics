@@ -27,14 +27,32 @@ namespace Cureos.Numerics.Optimizers
     public enum OptimizationStatus
     {
 // ReSharper disable InconsistentNaming
+
+        /*
+         * Common
+         */
         Normal,
         N_TooSmall,
         NPT_OutOfRange,
         MAXFUN_NotLargerThan_NPT,
-        ConstraintGradientIsZero,
         MAXFUN_Reached,
+
+        /*
+         * LINCOA specific
+         */
+        ConstraintGradientIsZero,
         X_RoundingErrorsPreventUpdate,
-        UpdatingFormulaDenominatorZero
+        UpdatingFormulaDenominatorZero,
+
+        /*
+         * BOBYQA specific
+         */
+        VariableBoundsArrayTooShort,
+        InvalidBoundsSpecification,
+        BoundsRangeTooSmall,
+        DenominatorCancellation,
+        TrustRegionStepReductionFailure
+
 // ReSharper enable InconsistentNaming
     }
 }

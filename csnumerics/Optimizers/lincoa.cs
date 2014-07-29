@@ -179,8 +179,6 @@ namespace Cureos.Numerics.Optimizers
         /// <summary>
         /// Initializes an instance of the LINCOA optimizer, assuming that number of variables and constraints are given by the size of <paramref name="a"/>.
         /// </summary>
-        /// <param name="n">Number of variables.</param>
-        /// <param name="m">Number of linear constraints.</param>
         /// <param name="objective">Objective function subject to minimization.</param>
         /// <param name="a">Linear constraints matrix.</param>
         /// <param name="b">Linear constraints vector.</param>

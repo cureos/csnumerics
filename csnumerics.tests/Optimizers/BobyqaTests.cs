@@ -42,30 +42,40 @@ namespace Cureos.Numerics.Optimizers
         [Test]
         public void FindMinimum_IntermedRosenbrock_ReturnsValidMinimum()
         {
-            var xx = new[] { 1.0, -1.0 };
-            Bobyqa.FindMinimum((n, x) => 10.0 * Math.Pow(x[0] * x[0] - x[1], 2.0) + Math.Pow(1.0 + x[0], 2.0), 2, xx);
-            Assert.AreEqual(-1.0, xx[0], TOL);
-            Assert.AreEqual(1.0, xx[1], TOL);
+            var optimizer = new Bobyqa(
+                2,
+                (n, x) => 10.0 * Math.Pow(x[0] * x[0] - x[1], 2.0) + Math.Pow(1.0 + x[0], 2.0));
+            var summary = optimizer.FindMinimum(new[] { 1.0, -1.0 });
+
+            Assert.AreEqual(-1.0, summary.X[0], TOL);
+            Assert.AreEqual(1.0, summary.X[1], TOL);
         }
 
         [Test]
         public void FindMinimum_HS04_ReturnsValidMinimum()
         {
-            var xx = new[] { 1.125, 0.125 };
-            Bobyqa.FindMinimum((n, x) => Math.Pow(x[0] + 1.0, 3.0) / 3.0 + x[1], 2, xx, new[] { 1.0, 0.0 }, null, 4);
-            Assert.AreEqual(1.0, xx[0], TOL);
-            Assert.AreEqual(0.0, xx[1], TOL);
+            var optimizer = new Bobyqa(2, (n, x) => Math.Pow(x[0] + 1.0, 3.0) / 3.0 + x[1], new[] { 1.0, 0.0 }, null)
+                                {
+                                    InterpolationConditions = 4
+                                };
+            var result = optimizer.FindMinimum(new[] { 1.125, 0.125 });
+
+            Assert.AreEqual(1.0, result.X[0], TOL);
+            Assert.AreEqual(0.0, result.X[1], TOL);
         }
 
         [Test]
         public void FindMinimum_HS05_ReturnsValidMinimum()
         {
-            var xx = new[] { 0.0, 0.0 };
-            Bobyqa.FindMinimum(
-                (n, x) => Math.Sin(x[0] + x[1]) + Math.Pow(x[0] - x[1], 2.0) - 1.5 * x[0] + 2.5 * x[1] + 1, 2, xx,
-                new[] { -1.5, -3.0 }, new[] { 4.0, 3.0 });
-            Assert.AreEqual(0.5 - Math.PI / 3.0, xx[0], TOL);
-            Assert.AreEqual(-0.5 - Math.PI / 3.0, xx[1], TOL);
+            var optimizer = new Bobyqa(
+                2,
+                (n, x) => Math.Sin(x[0] + x[1]) + Math.Pow(x[0] - x[1], 2.0) - 1.5 * x[0] + 2.5 * x[1] + 1,
+                new[] { -1.5, -3.0 },
+                new[] { 4.0, 3.0 });
+            var result = optimizer.FindMinimum(new[] { 0.0, 0.0 });
+
+            Assert.AreEqual(0.5 - Math.PI / 3.0, result.X[0], TOL);
+            Assert.AreEqual(-0.5 - Math.PI / 3.0, result.X[1], TOL);
         }
 
         [TestCase(5, 16)]
@@ -88,7 +98,7 @@ namespace Cureos.Numerics.Optimizers
             //     component of X to be in the interval [-1,1].
 
             var n = 2 * m;
-            var x = new double[n];
+            var x0 = new double[n];
             var xl = new double[n];
             var xu = new double[n];
 
@@ -105,8 +115,8 @@ namespace Cureos.Numerics.Optimizers
             for (var j = 1; j <= m; ++j)
             {
                 var temp = 2.0 * Math.PI * j / m;
-                x[2 * j - 2] = Math.Cos(temp);
-                x[2 * j - 1] = Math.Sin(temp);
+                x0[2 * j - 2] = Math.Cos(temp);
+                x0[2 * j - 1] = Math.Sin(temp);
             }
 
             const int iprint = 2;
@@ -114,8 +124,17 @@ namespace Cureos.Numerics.Optimizers
             const double rhobeg = 1.0E-1;
             const double rhoend = 1.0E-6;
 
-            const BobyqaExitStatus expected = BobyqaExitStatus.Normal;
-            var actual = Bobyqa.FindMinimum(BobyqaTestCalfun, n, x, xl, xu, npt, rhobeg, rhoend, iprint, maxfun);
+            var optimizer = new Bobyqa(n, this.BobyqaTestCalfun, xl, xu)
+                                {
+                                    InterpolationConditions = npt,
+                                    TrustRegionRadiusStart = rhobeg,
+                                    TrustRegionRadiusEnd = rhoend,
+                                    PrintLevel = iprint,
+                                    MaximumFunctionCalls = maxfun
+                                };
+
+            const OptimizationStatus expected = OptimizationStatus.Normal;
+            var actual = optimizer.FindMinimum(x0).Status;
             Assert.AreEqual(expected, actual);
         }
 
@@ -140,13 +159,19 @@ namespace Cureos.Numerics.Optimizers
             var xu = Enumerable.Repeat(2.0, n).ToArray();
             var expected = Enumerable.Repeat(1.0, n).ToArray();
 
+            var optimizer = new Bobyqa(n, this.Rosen, xl, xu)
+                                {
+                                    TrustRegionRadiusEnd = 1.0e-8,
+                                    MaximumFunctionCalls = 3000,
+                                    Logger = Console.Out
+                                };
             for (var num = 1; num <= maxAdditionalPoints; ++num)
             {
                 Console.WriteLine("\nNumber of additional points = {0}", num);
-                var npt = 2 * n + 1 + num;
-                var x = Enumerable.Repeat(0.1, n).ToArray();
-                Bobyqa.FindMinimum(Rosen, n, x, xl, xu, npt, -1, 1.0e-8, 1, 3000, Console.Out);
-                CollectionAssert.AreEqual(expected, x, new DoubleComparer(1.0e-6));
+                optimizer.InterpolationConditions = 2 * n + 1 + num;
+                var result = optimizer.FindMinimum(Enumerable.Repeat(0.1, n).ToArray());
+
+                CollectionAssert.AreEqual(expected, result.X, new DoubleComparer(1.0e-6));
             }
         }
         
@@ -154,10 +179,11 @@ namespace Cureos.Numerics.Optimizers
         public void FindMinimum_LogOutput_OutputNonEmpty()
         {
             const int n = 9;
-            var x = Enumerable.Repeat(0.1, n).ToArray();
+            var optimizer = new Bobyqa(n, this.Rosen) { Logger = Console.Out }; 
             using (var logger = new StringWriter())
             {
-                Bobyqa.FindMinimum(Rosen, n, x, null, null, -1, 1.0, 1.0e-8, 1, 2000, logger);
+                optimizer.Logger = logger;
+                optimizer.FindMinimum(Enumerable.Repeat(0.1, n).ToArray());
                 Assert.Greater(logger.ToString().Length, 0);
             }
         }
@@ -166,8 +192,8 @@ namespace Cureos.Numerics.Optimizers
         public void FindMinimum_LogOutputToConsole_OutputNonEmpty()
         {
             const int n = 9;
-            var x = Enumerable.Repeat(0.1, n).ToArray();
-            Bobyqa.FindMinimum(Rosen, n, x, null, null, -1, 1.0, 1.0e-8, 1, 2000, Console.Out);
+            var optimizer = new Bobyqa(n, this.Rosen) { Logger = Console.Out };
+            optimizer.FindMinimum(Enumerable.Repeat(0.1, n).ToArray());
         }
 
         public double Rosen(int n, double[] x)

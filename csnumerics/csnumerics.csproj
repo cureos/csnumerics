@@ -39,6 +39,7 @@
     <AssemblyOriginatorKeyFile>csnumerics.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Optimizers\Bobyqa.cs" />
     <Compile Include="Optimizers\IOptimizer.cs" />
     <Compile Include="Optimizers\IPowellOptimizer.cs" />
     <Compile Include="Optimizers\Lincoa.cs" />

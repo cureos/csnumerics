@@ -40,8 +40,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Optimizers\Bobyqa.cs" />
+    <Compile Include="Optimizers\Cobyla.cs" />
     <Compile Include="Optimizers\IOptimizer.cs" />
-    <Compile Include="Optimizers\IPowellOptimizer.cs" />
+    <Compile Include="Optimizers\IQuadraticModelOptimizer.cs" />
+    <Compile Include="Optimizers\ITrustRegionOptimizer.cs" />
     <Compile Include="Optimizers\Lincoa.cs" />
     <Compile Include="Optimizers\OptimizationStatus.cs" />
     <Compile Include="Optimizers\OptimizationSummary.cs" />

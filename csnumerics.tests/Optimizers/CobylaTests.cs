@@ -40,7 +40,6 @@ namespace Cureos.Numerics.Optimizers
         private const double rhobeg = 0.5;
         private const double rhoend1 = 1.0e-6;
         private const double rhoend2 = 1.0e-8;
-        private const int iprint = 1;
         private const int maxfun = 3500;
 
         #endregion
@@ -107,15 +106,21 @@ namespace Cureos.Numerics.Optimizers
 
         public double RunTestProblem(CalcfcDelegate calcfc, int n, int m, double rhoend, double[] xopt)
         {
-            var x = Enumerable.Repeat(1.0, n).ToArray();
-
             var timer = new Stopwatch();
             timer.Restart();
-            Assert.That(Cobyla.FindMinimum(calcfc, n, m, x, rhobeg, rhoend, iprint, maxfun),
-                        Is.EqualTo(CobylaExitStatus.Normal).Or.EqualTo(CobylaExitStatus.MaxIterationsReached));
+            var optimizer = new Cobyla(n, m, calcfc)
+                                {
+                                    MaximumFunctionCalls = maxfun,
+                                    TrustRegionRadiusStart = rhobeg,
+                                    TrustRegionRadiusEnd = rhoend
+                                };
+            var result = optimizer.FindMinimum(Enumerable.Repeat(1.0, n).ToArray());
             timer.Stop();
 
-            var error = xopt.Select((xo, i) => Math.Pow(xo - x[i], 2.0)).Sum();
+            Assert.That(result.Status,
+                        Is.EqualTo(OptimizationStatus.Normal).Or.EqualTo(OptimizationStatus.MAXFUN_Reached));
+
+            var error = xopt.Select((xo, i) => Math.Pow(xo - result.X[i], 2.0)).Sum();
             Console.WriteLine("{0}Least squares error in variables = {1,16:E6}", Environment.NewLine, error);
             Console.WriteLine("Elapsed time for optimization = {0} ms", timer.ElapsedMilliseconds);
 
@@ -244,9 +249,10 @@ namespace Cureos.Numerics.Optimizers
         [Test]
         public void FindMinimum_LogOutputToConsole_VisualInspection()
         {
-            var x = Enumerable.Repeat(1.0, 9).ToArray();
-            var actual = Cobyla.FindMinimum(calcfc10, 9, 14, x, rhobeg, rhoend1, 2, maxfun, Console.Out);
+            var optimizer = new Cobyla(9, 14, calcfc10) { PrintLevel = 2, Logger = Console.Out };
+            optimizer.FindMinimum(Enumerable.Repeat(1.0, 9).ToArray());
         }
+
         #endregion
     }
 }

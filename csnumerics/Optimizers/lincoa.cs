@@ -48,7 +48,7 @@ namespace Cureos.Numerics.Optimizers
     /// <summary>
     /// LINCOA, Derivative-free optimizer of nonlinear objective function with linear constraints.
     /// </summary>
-    public class Lincoa : IPowellOptimizer
+    public class Lincoa : IQuadraticModelOptimizer
     {
 // ReSharper disable InconsistentNaming
 
@@ -267,7 +267,7 @@ namespace Cureos.Numerics.Optimizers
             var xopt = new double[_n];
             Array.Copy(x, 1, xopt, 0, _n);
 
-            return new OptimizationSummary(status, nf, f, xopt);
+            return new OptimizationSummary(status, nf, xopt, f);
         }
 
 // ReSharper disable SuggestUseVarKeywordEvident

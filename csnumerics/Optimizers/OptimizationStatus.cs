@@ -31,17 +31,29 @@ namespace Cureos.Numerics.Optimizers
         /*
          * Common
          */
+
+        /// <summary>
+        /// Optimization successfully completed.
+        /// </summary>
         Normal,
         N_TooSmall,
         NPT_OutOfRange,
         MAXFUN_NotLargerThan_NPT,
+
+        /// <summary>
+        /// Maximum number of iterations (function/constraints evaluations) reached during optimization.
+        /// </summary>
         MAXFUN_Reached,
+
+        /// <summary>
+        /// Size of rounding error is becoming damaging, terminating prematurely.
+        /// </summary>
+        X_RoundingErrorsPreventUpdate,
 
         /*
          * LINCOA specific
          */
         ConstraintGradientIsZero,
-        X_RoundingErrorsPreventUpdate,
         UpdatingFormulaDenominatorZero,
 
         /*

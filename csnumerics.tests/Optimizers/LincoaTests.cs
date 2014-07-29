@@ -19,12 +19,12 @@
  *  along with CSNumerics.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-using System;
-using Cureos.Numerics.Optimizers;
-using NUnit.Framework;
-
-namespace Cureos.Numerics
+namespace Cureos.Numerics.Optimizers
 {
+    using System;
+
+    using NUnit.Framework;
+
     [TestFixture]
     public class LincoaTests
     {
@@ -36,7 +36,7 @@ namespace Cureos.Numerics
 
         #region Unit tests
 
-        [TestCase(15, 0.001)]
+        [TestCase(15, 0.01)]
         [TestCase(30, 0.001)]
         [TestCase(45, 0.001)]
         public void FindMinimum_PtsinTet_YieldsExpectedValue(int npt, double tol)
@@ -116,7 +116,7 @@ namespace Cureos.Numerics
             x[10] = 1.0 / ss;
             x[11] = 1.0 / ss;
 
-            _fmax = Math.Pow(ss - xs - ys - zs, 3.0) / 6.0;
+            this._fmax = Math.Pow(ss - xs - ys - zs, 3.0) / 6.0;
 
             //     Call of LINCOA, which provides the printing given at the end of this note.
             const double rhobeg = 1.0;
@@ -124,7 +124,7 @@ namespace Cureos.Numerics
             const int iprint = 1;
             const int maxfun = 10000;
 
-            var lincoa = new Lincoa(PtsinTet, a, b)
+            var lincoa = new Lincoa(this.PtsinTet, a, b)
                              {
                                  InterpolationConditions = npt,
                                  TrustRegionRadiusStart = rhobeg,
@@ -149,15 +149,15 @@ namespace Cureos.Numerics
             var v24 = x[3] * x[10] - x[9] * x[4];
             var v34 = x[6] * x[10] - x[9] * x[7];
             var del1 = v23 * x[11] - v24 * x[8] + v34 * x[5];
-            if (del1 <= 0.0) return _fmax;
+            if (del1 <= 0.0) return this._fmax;
             var del2 = -v34 * x[2] - v13 * x[11] + v14 * x[8];
-            if (del2 <= 0.0) return _fmax;
+            if (del2 <= 0.0) return this._fmax;
             var del3 = -v14 * x[5] + v24 * x[2] + v12 * x[11];
-            if (del3 <= 0.0) return _fmax;
+            if (del3 <= 0.0) return this._fmax;
             var del4 = -v12 * x[8] + v13 * x[5] - v23 * x[2];
-            if (del4 <= 0.0) return _fmax;
+            if (del4 <= 0.0) return this._fmax;
             var temp = Math.Pow(del1 + del2 + del3 + del4, 3.0) / (del1 * del2 * del3 * del4);
-            return Math.Min(temp / 6.0, _fmax);
+            return Math.Min(temp / 6.0, this._fmax);
         }
 
         #endregion

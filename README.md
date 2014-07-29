@@ -12,6 +12,7 @@ It currently consists of C# implementations of Michael J.D. Powell's optimizatio
 
 * [BOBYQA](https://github.com/cureos/csnumerics/wiki/BOBYQA) for minimizing a nonlinear objective function subject to variable bounds.
 * [LINCOA](https://github.com/cureos/csnumerics/wiki/LINCOA) for minimizing a nonlinear objective function subject to linear constraints.
+* [COBYLA](https://github.com/cureos/csnumerics/wiki/COBYLA) for minimizing a nonlinear objective function subject to nonlinear constraints.
 
 The *CSNumerics* assembly is immediately applicable with the following targets:
 

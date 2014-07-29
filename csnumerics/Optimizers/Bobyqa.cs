@@ -54,7 +54,7 @@ namespace Cureos.Numerics.Optimizers
     /// of the change to the second derivative of the model, beginning with the zero matrix. 
     /// The values of the variables are constrained by upper and lower bounds.
     /// </summary>
-    public class Bobyqa : IPowellOptimizer
+    public class Bobyqa : IQuadraticModelOptimizer
     {
         #region FIELDS
 
@@ -235,12 +235,12 @@ namespace Cureos.Numerics.Optimizers
         public OptimizationSummary FindMinimum(double[] x0)
         {
             // Verify that the number of variables is greater than 1; BOBYQA does not support 1-D optimization.
-            if (_n < 2) return new OptimizationSummary(OptimizationStatus.N_TooSmall, 0, Double.NaN, null);
+            if (_n < 2) return new OptimizationSummary(OptimizationStatus.N_TooSmall, 0, null, Double.NaN);
 
             // Verify that the number of variables, and bounds if defined, in the respective array is sufficient.
             if (x0.Length < _n || (_xl != null && _xl.Length < _n) || (_xu != null && _xu.Length < _n))
             {
-                return new OptimizationSummary(OptimizationStatus.VariableBoundsArrayTooShort, 0, Double.NaN, null);
+                return new OptimizationSummary(OptimizationStatus.VariableBoundsArrayTooShort, 0, null, Double.NaN);
             }
 
             // C# arrays are zero-based, whereas BOBYQA methods expect one-based arrays. Therefore define internal matrices
@@ -271,7 +271,7 @@ namespace Cureos.Numerics.Optimizers
             for (var i = 1; i <= _n; ++i)
             {
                 if ((rng[i] = xu[i] - xl[i]) <= 0.0)
-                    return new OptimizationSummary(OptimizationStatus.InvalidBoundsSpecification, 0, Double.NaN, null);
+                    return new OptimizationSummary(OptimizationStatus.InvalidBoundsSpecification, 0, null, Double.NaN);
                 minrng = Math.Min(rng[i], minrng);
 
                 if (xx0[i] < xl[i]) xx0[i] = xl[i];
@@ -357,7 +357,7 @@ namespace Cureos.Numerics.Optimizers
             if (npt < n + 2 || npt > ((n + 2) * np) / 2)
             {
                 if (logger != null) logger.WriteLine(InvalidNptText);
-                return new OptimizationSummary(OptimizationStatus.NPT_OutOfRange, 0, Double.NaN, null);
+                return new OptimizationSummary(OptimizationStatus.NPT_OutOfRange, 0, null, Double.NaN);
             }
 
             var ndim = npt + n;
@@ -378,7 +378,7 @@ namespace Cureos.Numerics.Optimizers
                 if (temp < rhobeg + rhobeg)
                 {
                     if (logger != null) logger.WriteLine(TooSmallBoundRangeText);
-                    return new OptimizationSummary(OptimizationStatus.BoundsRangeTooSmall, 0, Double.NaN, null);
+                    return new OptimizationSummary(OptimizationStatus.BoundsRangeTooSmall, 0, null, Double.NaN);
                 }
                 sl[j] = xl[j] - x[j];
                 su[j] = xu[j] - x[j];
@@ -1207,7 +1207,7 @@ namespace Cureos.Numerics.Optimizers
             var xret = new double[n];
             Array.Copy(x, 1, xret, 0, n);
 
-            return new OptimizationSummary(status, nf, f, xret);
+            return new OptimizationSummary(status, nf, xret, f);
         }
 
         private static void ALTMOV(int n, int npt, double[,] xpt, double[] xopt, double[,] bmat,

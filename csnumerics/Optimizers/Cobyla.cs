@@ -24,12 +24,14 @@
  *  The Fortran 90 version was by Alan Miller (Alan.Miller @ vic.cmis.csiro.au). Latest revision - 30 October 1998
  */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-
 namespace Cureos.Numerics.Optimizers
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+
+    // ReSharper disable InconsistentNaming
+
     #region DELEGATES
 
     /// <summary>
@@ -41,31 +43,6 @@ namespace Cureos.Numerics.Optimizers
     /// <param name="f">Calculated objective function value.</param>
     /// <param name="con">Calculated function values of the constraints.</param>
     public delegate void CalcfcDelegate(int n, int m, double[] x, out double f, double[] con);
- 
-    #endregion
-
-    #region ENUMERATIONS
-
-    /// <summary>
-    /// Status of optimization upon return.
-    /// </summary>
-    public enum CobylaExitStatus
-    {
-        /// <summary>
-        /// Optimization successfully completed.
-        /// </summary>
-        Normal,
-
-        /// <summary>
-        /// Maximum number of iterations (function/constraints evaluations) reached during optimization.
-        /// </summary>
-        MaxIterationsReached,
-
-        /// <summary>
-        /// Size of rounding error is becoming damaging, terminating prematurely.
-        /// </summary>
-        DivergingRoundingErrors
-    }
 
     #endregion
 
@@ -83,77 +60,155 @@ namespace Cureos.Numerics.Optimizers
     /// The initial point X is taken as one vertex of the initial simplex with zero being another, so, X should 
     /// not be entered as the zero vector.
     /// </summary>
-    public static class Cobyla
+    public class Cobyla : ITrustRegionOptimizer
     {
         #region FIELDS
+
+        private readonly int _n;
+        private readonly int _m;
+        private readonly CalcfcDelegate _calcfc;
+
+        private int _maxfun;
+        private int _iprint;
+
+        private double _rhobeg;
+        private double _rhoend;
+
+        private TextWriter _logger;
 
         private static readonly string LF = Environment.NewLine;
         private static readonly string IterationResultFormatter = LF + "NFVALS = {0,5}   F = {1,13:E6}    MAXCV = {2,13:E6}";
 
         #endregion
-        
+
+        /// <summary>
+        /// Minimizes the objective function F with respect to a set of inequality constraints CON, 
+        /// and returns the optimal variable array. F and CON may be non-linear, and should preferably be smooth.
+        /// </summary>
+        /// <param name="n">Number of variables.</param>
+        /// <param name="m">Number of constraints.</param>
+        /// <param name="calcfc">Method for calculating objective function and constraints.</param>
+        public Cobyla(int n, int m, CalcfcDelegate calcfc)
+        {
+            _n = n;
+            _m = m;
+            _calcfc = calcfc;
+
+            _rhobeg = 0.5;
+            _rhoend = 1.0e-6;
+            _iprint = 1;
+            _maxfun = 10000;
+            _logger = null;
+        }
+
+        #region PROPERTIES
+
+        /// <summary>
+        /// Gets or sets the number of maximum function calls.
+        /// </summary>
+        public int MaximumFunctionCalls
+        {
+            get
+            {
+                return this._maxfun;
+            }
+            set
+            {
+                this._maxfun = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the print level to the logger.
+        /// </summary>
+        public int PrintLevel
+        {
+            get
+            {
+                return this._iprint;
+            }
+            set
+            {
+                this._iprint = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the logger to which the optimizer log information should be sent.
+        /// </summary>
+        public TextWriter Logger
+        {
+            get
+            {
+                return this._logger;
+            }
+            set
+            {
+                this._logger = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the final value of the trust region radius.
+        /// </summary>
+        public double TrustRegionRadiusStart
+        {
+            get
+            {
+                return this._rhobeg;
+            }
+            set
+            {
+                this._rhobeg = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the start value of the trust region radius.
+        /// </summary>
+        public double TrustRegionRadiusEnd
+        {
+            get
+            {
+                return this._rhoend;
+            }
+            set
+            {
+                this._rhoend = value;
+            }
+        }
+
+        #endregion
+
         #region METHODS
 
         /// <summary>
-        /// Minimizes the objective function F with respect to a set of inequality constraints CON, 
-        /// and returns the optimal variable array. F and CON may be non-linear, and should preferably be smooth.
+        /// Find a local minimum of provided objective function satisfying the nonlinear constraints.
         /// </summary>
-        /// <param name="calcfc">Method for calculating objective function and constraints.</param>
-        /// <param name="n">Number of variables.</param>
-        /// <param name="m">Number of constraints.</param>
-        /// <param name="x">On input initial values of the variables (zero-based array). On output
-        /// optimal values of the variables obtained in the COBYLA minimization.</param>
-        /// <param name="rhobeg">Initial size of the simplex.</param>
-        /// <param name="rhoend">Final value of the simplex.</param>
-        /// <param name="iprint">Print level, 0 &lt;= iprint &lt;= 3, where 0 provides no output and
-        /// 3 provides full output to the console.</param>
-        /// <param name="maxfun">Maximum number of function evaluations before terminating.</param>
-        /// <param name="logger">If defined, text writer where to log output from Cobyla.</param>
-        /// <returns>Return status of the COBYLA2 optimization.</returns>
-        public static CobylaExitStatus FindMinimum(CalcfcDelegate calcfc, int n, int m, double[] x, 
-            double rhobeg = 0.5, double rhoend = 1.0e-6, int iprint = 2, int maxfun = 3500,
-            TextWriter logger = null)
+        /// <param name="x0">Initial variable array.</param>
+        /// <returns>Summary of the optimization result.</returns>
+        public OptimizationSummary FindMinimum(double[] x0)
         {
-            var iters = maxfun;
-            return cobyla(calcfc, n, m, x, rhobeg, rhoend, iprint, ref iters, logger);
+            var nf = _maxfun;
+            var status = COBYLA(_calcfc, _n, _m, x0, _rhobeg, _rhoend, _iprint, ref nf, _logger);
+
+            double f;
+            var con = new double[_m];
+            _calcfc(_n, _m, x0, out f, con);
+
+            return new OptimizationSummary(status, nf, x0, f, con);
         }
 
-        /// <summary>
-        /// Minimizes the objective function F with respect to a set of inequality constraints CON, 
-        /// and returns the optimal variable array. F and CON may be non-linear, and should preferably be smooth.
-        /// This overloaded method provides more detailed results of the optimization, including final
-        /// objective function value, constraints function values and performed number of function evaluations.
-        /// </summary>
-        /// <param name="calcfc">Method for calculating objective function and constraints.</param>
-        /// <param name="n">Number of variables.</param>
-        /// <param name="m">Number of constraints.</param>
-        /// <param name="x">On input initial values of the variables (zero-based array). On output
-        /// optimal values of the variables obtained in the COBYLA minimization.</param>
-        /// <param name="rhobeg">Initial size of the simplex.</param>
-        /// <param name="rhoend">Final value of the simplex.</param>
-        /// <param name="iprint">Print level, 0 &lt;= iprint &lt;= 3, where 0 provides no output and
-        /// 3 provides full output to the console.</param>
-        /// <param name="maxfun">Maximum number of function evaluations before terminating.</param>
-        /// <param name="f">Objective function value at optimal variable values.</param>
-        /// <param name="con">Constraints function values at optimal variable values.</param>
-        /// <param name="iters">Performed number of function and constraints evaluations.</param>
-        /// <param name="logger">If defined, text writer where to log output from Cobyla.</param>
-        /// <returns>Return status of the COBYLA2 optimization.</returns>
-        public static CobylaExitStatus FindMinimum(CalcfcDelegate calcfc, int n, int m, double[] x,
-            double rhobeg, double rhoend, int iprint, int maxfun, out double f, out double[] con, out int iters,
-            TextWriter logger = null)
-        {
-            iters = maxfun;
-            var status = cobyla(calcfc, n, m, x, rhobeg, rhoend, iprint, ref iters, logger);
-
-            con = new double[m];
-            calcfc(n, m, x, out f, con);
-
-            return status;
-        }
-
-        private static CobylaExitStatus cobyla(CalcfcDelegate calcfc, int n, int m, double[] x, 
-            double rhobeg, double rhoend, int iprint, ref int iters, TextWriter logger)
+        private static OptimizationStatus COBYLA(
+            CalcfcDelegate calcfc,
+            int n,
+            int m,
+            double[] x,
+            double rhobeg,
+            double rhoend,
+            int iprint,
+            ref int iters,
+            TextWriter logger)
         {
             //     This subroutine minimizes an objective function F(X) subject to M
             //     inequality constraints on X, where X is a vector of variables that has
@@ -224,15 +279,24 @@ namespace Cureos.Numerics.Optimizers
                         Array.Copy(ocon, 0, con, 1, mm);
                     });
 
-            var status = cobylb(fcalcfc, n, m, mpp, xinout, rhobeg, rhoend, iprint, ref iters, logger);
+            var status = COBYLB(fcalcfc, n, m, mpp, xinout, rhobeg, rhoend, iprint, ref iters, logger);
 
             Array.Copy(xinout, 1, x, 0, n);
 
             return status;
         }
 
-        private static CobylaExitStatus cobylb(CalcfcDelegate calcfc, int n, int m, int mpp, double[] x,
-            double rhobeg, double rhoend, int iprint, ref int maxfun, TextWriter logger)
+        private static OptimizationStatus COBYLB(
+            CalcfcDelegate calcfc,
+            int n,
+            int m,
+            int mpp,
+            double[] x,
+            double rhobeg,
+            double rhoend,
+            int iprint,
+            ref int maxfun,
+            TextWriter logger)
         {
             // N.B. Arguments CON, SIM, SIMI, DATMAT, A, VSIG, VETA, SIGBAR, DX, W & IACT
             //      have been removed.
@@ -264,18 +328,17 @@ namespace Cureos.Numerics.Optimizers
             var prerem = 0.0;
 
             var con = new double[1 + mpp];
-            var sim = new double[1 + n,1 + np];
-            var simi = new double[1 + n,1 + n];
-            var datmat = new double[1 + mpp,1 + np];
-            var a = new double[1 + n,1 + mp];
+            var sim = new double[1 + n, 1 + np];
+            var simi = new double[1 + n, 1 + n];
+            var datmat = new double[1 + mpp, 1 + np];
+            var a = new double[1 + n, 1 + mp];
             var vsig = new double[1 + n];
             var veta = new double[1 + n];
             var sigbar = new double[1 + n];
             var dx = new double[1 + n];
             var w = new double[1 + n];
 
-            if (iprint >= 2 && logger != null) 
-                logger.WriteLine(LF + "The initial value of RHO is {0,13:F6} and PARMU is set to zero.", rho);
+            if (iprint >= 2 && logger != null) logger.WriteLine(LF + "The initial value of RHO is {0,13:F6} and PARMU is set to zero.", rho);
 
             var nfvals = 0;
             var temp = 1.0 / rho;
@@ -290,7 +353,7 @@ namespace Cureos.Numerics.Optimizers
             var jdrop = np;
             var ibrnch = false;
 
-            CobylaExitStatus status;
+            OptimizationStatus status;
 
             //     Make the next call of the user-supplied subroutine CALCFC. These
             //     instructions are also used for calling CALCFC during the iterations of
@@ -299,16 +362,16 @@ namespace Cureos.Numerics.Optimizers
             L_40:
             if (nfvals >= maxfun && nfvals > 0)
             {
-                if (iprint >= 1 && logger != null)
-                    logger.WriteLine(LF + "Return from subroutine COBYLA because the MAXFUN limit has been reached.");
-                status = CobylaExitStatus.MaxIterationsReached;
+                if (iprint >= 1 && logger != null) logger.WriteLine(LF + "Return from subroutine COBYLA because the MAXFUN limit has been reached.");
+                status = OptimizationStatus.MAXFUN_Reached;
                 goto L_600;
             }
 
             ++nfvals;
 
             calcfc(n, m, x, out f, con);
-            resmax = 0.0; for (var k = 1; k <= m; ++k) resmax = Math.Max(resmax, -con[k]);
+            resmax = 0.0;
+            for (var k = 1; k <= m; ++k) resmax = Math.Max(resmax, -con[k]);
 
             if ((nfvals == iprint - 1 || iprint == 3) && logger != null)
             {
@@ -352,7 +415,8 @@ namespace Cureos.Numerics.Optimizers
                         for (var k = 1; k <= jdrop; ++k)
                         {
                             sim[jdrop, k] = -rho;
-                            temp = 0.0; for (var i = k; i <= jdrop; ++i) temp -= simi[i, k];
+                            temp = 0.0;
+                            for (var i = k; i <= jdrop; ++i) temp -= simi[i, k];
                             simi[jdrop, k] = temp;
                         }
                     }
@@ -429,8 +493,9 @@ namespace Cureos.Numerics.Optimizers
             if (error > 0.1)
             {
                 if (iprint >= 1 && logger != null)
-                    logger.WriteLine(LF + "Return from subroutine COBYLA because rounding errors are becoming damaging.");
-                status = CobylaExitStatus.DivergingRoundingErrors;
+                    logger.WriteLine(
+                        LF + "Return from subroutine COBYLA because rounding errors are becoming damaging.");
+                status = OptimizationStatus.X_RoundingErrorsPreventUpdate;
                 goto L_600;
             }
 
@@ -459,8 +524,10 @@ namespace Cureos.Numerics.Optimizers
 
             for (var j = 1; j <= n; ++j)
             {
-                var wsig = 0.0; for (var k = 1; k <= n; ++k) wsig += simi[j, k] * simi[j, k];
-                var weta = 0.0; for (var k = 1; k <= n; ++k) weta += sim[k, j] * sim[k, j];
+                var wsig = 0.0;
+                for (var k = 1; k <= n; ++k) wsig += simi[j, k] * simi[j, k];
+                var weta = 0.0;
+                for (var k = 1; k <= n; ++k) weta += sim[k, j] * sim[k, j];
                 vsig[j] = 1.0 / Math.Sqrt(wsig);
                 veta[j] = Math.Sqrt(weta);
                 if (vsig[j] < parsig || veta[j] > pareta) iflag = false;
@@ -539,10 +606,11 @@ namespace Cureos.Numerics.Optimizers
             //     Calculate DX = x(*)-x(0).
             //     Branch if the length of DX is less than 0.5*RHO.
 
-            trstlp(n, m, a, con, rho, dx, out ifull);
+            TRSTLP(n, m, a, con, rho, dx, out ifull);
             if (!ifull)
             {
-                temp = 0.0; for (var k = 1; k <= n; ++k) temp += dx[k] * dx[k];
+                temp = 0.0;
+                for (var k = 1; k <= n; ++k) temp += dx[k] * dx[k];
                 if (temp < 0.25 * rho * rho)
                 {
                     ibrnch = true;
@@ -628,7 +696,8 @@ namespace Cureos.Numerics.Optimizers
                     temp = veta[j];
                     if (trured > 0.0)
                     {
-                        temp = 0.0; for (var k = 1; k <= n; ++k) temp += Math.Pow(dx[k] - sim[k, j], 2.0);
+                        temp = 0.0;
+                        for (var k = 1; k <= n; ++k) temp += Math.Pow(dx[k] - sim[k, j], 2.0);
                         temp = Math.Sqrt(temp);
                     }
                     if (temp > edgmax)
@@ -708,8 +777,7 @@ namespace Cureos.Numerics.Optimizers
                 }
                 if (logger != null)
                 {
-                    if (iprint >= 2)
-                        logger.WriteLine(LF + "Reduction in RHO to {0,13:E6}  and PARMU = {1,13:E6}", rho, parmu);
+                    if (iprint >= 2) logger.WriteLine(LF + "Reduction in RHO to {0,13:E6}  and PARMU = {1,13:E6}", rho, parmu);
                     if (iprint == 2)
                     {
                         logger.WriteLine(IterationResultFormatter, nfvals, datmat[mp, np], datmat[mpp, np]);
@@ -721,7 +789,7 @@ namespace Cureos.Numerics.Optimizers
 
             //     Return the best calculated values of the variables.
 
-            status = CobylaExitStatus.Normal;
+            status = OptimizationStatus.Normal;
             if (iprint >= 1 && logger != null) logger.WriteLine(LF + "Normal return from subroutine COBYLA");
             if (ifull) goto L_620;
 
@@ -742,7 +810,7 @@ namespace Cureos.Numerics.Optimizers
             return status;
         }
 
-        private static void trstlp(int n, int m, double[,] a, double[] b, double rho, double[] dx, out bool ifull)
+        private static void TRSTLP(int n, int m, double[,] a, double[] b, double rho, double[] dx, out bool ifull)
         {
             // N.B. Arguments Z, ZDOTA, VMULTC, SDIRN, DXNEW, VMULTD & IACT have been removed.
 
@@ -792,7 +860,7 @@ namespace Cureos.Numerics.Optimizers
             var nactx = 0;
             var resold = 0.0;
 
-            var z = new double[1 + n,1 + n];
+            var z = new double[1 + n, 1 + n];
             var zdota = new double[2 + m];
             var vmultc = new double[2 + m];
             var sdirn = new double[1 + n];
@@ -961,7 +1029,8 @@ namespace Cureos.Numerics.Optimizers
                     {
                         vmultd[k] = 0.0;
                     }
-                } while (--k > 0);
+                }
+                while (--k > 0);
             }
             if (ratio < 0.0) goto L_490;
 
@@ -969,8 +1038,7 @@ namespace Cureos.Numerics.Optimizers
             //     that the one to be replaced is at the end of the list. Also calculate the
             //     new value of ZDOTA(NACT) and branch if it is not acceptable.
 
-            for (var k = 1; k <= nact; ++k)
-                vmultc[k] = Math.Max(0.0, vmultc[k] - ratio * vmultd[k]);
+            for (var k = 1; k <= nact; ++k) vmultc[k] = Math.Max(0.0, vmultc[k] - ratio * vmultd[k]);
             if (icon < nact)
             {
                 var isave = iact[icon];
@@ -995,7 +1063,8 @@ namespace Cureos.Numerics.Optimizers
                     iact[k] = kw;
                     vmultc[k] = vmultc[kp];
                     k = kp;
-                } while (k < nact);
+                }
+                while (k < nact);
                 iact[k] = isave;
                 vmultc[k] = vsave;
             }
@@ -1069,7 +1138,8 @@ namespace Cureos.Numerics.Optimizers
                     iact[k] = kk;
                     vmultc[k] = vmultc[kp];
                     k = kp;
-                } while (k < nact);
+                }
+                while (k < nact);
 
                 iact[k] = isave;
                 vmultc[k] = vsave;
@@ -1212,8 +1282,7 @@ namespace Cureos.Numerics.Optimizers
 
             temp = 1.0 - ratio;
             for (var k = 1; k <= n; ++k) dx[k] = temp * dx[k] + ratio * dxnew[k];
-            for (var k = 1; k <= mcon; ++k)
-                vmultc[k] = Math.Max(0.0, temp * vmultc[k] + ratio * vmultd[k]);
+            for (var k = 1; k <= mcon; ++k) vmultc[k] = Math.Max(0.0, temp * vmultc[k] + ratio * vmultd[k]);
             if (mcon == m) resmax = resold + ratio * (resmax - resold);
 
             //     If the full step is not acceptable then begin another iteration.
@@ -1237,7 +1306,21 @@ namespace Cureos.Numerics.Optimizers
             ifull = false;
         }
 
-        private static T[] ROW<T>(this T[,] src, int rowidx)
+        private static double DOT_PRODUCT(double[] lhs, double[] rhs)
+        {
+            var sum = 0.0;
+            for (var i = 0; i < lhs.Length; ++i) sum += lhs[i] * rhs[i];
+            return sum;
+        }
+
+        #endregion
+    }
+
+    #region EXTENSION METHODS CLASS
+
+    internal static class CobylaExtensionMethods
+    {
+        internal static T[] ROW<T>(this T[,] src, int rowidx)
         {
             var cols = src.GetLength(1);
             var dest = new T[cols];
@@ -1245,7 +1328,7 @@ namespace Cureos.Numerics.Optimizers
             return dest;
         }
 
-        private static T[] COL<T>(this T[,] src, int colidx)
+        internal static T[] COL<T>(this T[,] src, int colidx)
         {
             var rows = src.GetLength(0);
             var dest = new T[rows];
@@ -1253,7 +1336,7 @@ namespace Cureos.Numerics.Optimizers
             return dest;
         }
 
-        private static T[] PART<T>(this IList<T> src, int from, int to)
+        internal static T[] PART<T>(this IList<T> src, int from, int to)
         {
             var dest = new T[to - from + 1];
             var destidx = 0;
@@ -1261,20 +1344,15 @@ namespace Cureos.Numerics.Optimizers
             return dest;
         }
 
-        private static string FORMAT(this double[] x)
+        internal static string FORMAT(this double[] x)
         {
             var xStr = new string[x.Length];
             for (var i = 0; i < x.Length; ++i) xStr[i] = String.Format("{0,13:F6}", x[i]);
             return String.Concat(xStr);
         }
-
-        private static double DOT_PRODUCT(double[] lhs, double[] rhs)
-        {
-            var sum = 0.0; for (var i = 0; i < lhs.Length; ++i) sum += lhs[i] * rhs[i];
-            return sum;
-        }
-
-        #endregion
     }
 
+    // ReSharper restore InconsistentNaming
+
+    #endregion
 }

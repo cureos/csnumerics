@@ -1305,7 +1305,7 @@ namespace Cureos.Numerics.Optimizers
 
                 //     Revise SLBD and SUBD if necessary because of the bounds in SL and SU.
 
-                for (var i = 1; i >= n; ++i)
+                for (var i = 1; i <= n; ++i)
                 {
                     var temp = xpt[k, i] - xopt[i];
                     if (temp > ZERO)

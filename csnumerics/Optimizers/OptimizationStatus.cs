@@ -36,8 +36,20 @@ namespace Cureos.Numerics.Optimizers
         /// Optimization successfully completed.
         /// </summary>
         Normal,
+
+        /// <summary>
+        /// Too few variables.
+        /// </summary>
         N_TooSmall,
+
+        /// <summary>
+        /// Invalid number of interpolation conditions.
+        /// </summary>
         NPT_OutOfRange,
+
+        /// <summary>
+        /// Specified maximum number of function evaluations must exceed number of interpolation conditions.
+        /// </summary>
         MAXFUN_NotLargerThan_NPT,
 
         /// <summary>
@@ -53,16 +65,44 @@ namespace Cureos.Numerics.Optimizers
         /*
          * LINCOA specific
          */
+
+        /// <summary>
+        /// Constraint gradient is too small.
+        /// </summary>
         ConstraintGradientIsZero,
+
+        /// <summary>
+        /// Denominator in updating formula is too small.
+        /// </summary>
         UpdatingFormulaDenominatorZero,
 
         /*
          * BOBYQA specific
          */
+
+        /// <summary>
+        /// Insufficient number of variable bounds.
+        /// </summary>
         VariableBoundsArrayTooShort,
+
+        /// <summary>
+        /// Invalid variable bounds specification.
+        /// </summary>
         InvalidBoundsSpecification,
+
+        /// <summary>
+        /// Distance between lower and upper bound is insufficient for one or more variables.
+        /// </summary>
         BoundsRangeTooSmall,
+
+        /// <summary>
+        /// Denominator cancellation.
+        /// </summary>
         DenominatorCancellation,
+
+        /// <summary>
+        /// Reduction of trust-region step failed.
+        /// </summary>
         TrustRegionStepReductionFailure
 
 // ReSharper enable InconsistentNaming

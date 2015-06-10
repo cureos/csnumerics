@@ -33,7 +33,7 @@ namespace Cureos.Numerics.Issues
     {
         #region Unit tests
 
-        [Test]
+        [Test, Ignore]
         public void Cobyla_FindMinimum_ConstraintsShouldBeSatisfied()
         {
             var x0 = new[] { 0.705, 0.0075, 0.075, 0, 0.0375, 0, 0.05, 0.125 };
@@ -42,7 +42,7 @@ namespace Cureos.Numerics.Issues
                                  MaximumFunctionCalls = 100000,
                                  TrustRegionRadiusStart = 1.0,
                                  TrustRegionRadiusEnd = 1.0e-6,
-                                 PrintLevel = 3,
+                                 PrintLevel = 1,
                                  Logger = Console.Out
                              };
 

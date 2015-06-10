@@ -152,7 +152,7 @@ namespace Cureos.Numerics.Optimizers
             return f;
         }
 
-        [TestCase(13, 78)]
+        [TestCase(13, 78), Ignore]
         public void FindMinimum_ConstrainedRosenWithAdditionalInterpolationPoints_ReturnsValidMinimum(int n, int maxAdditionalPoints)
         {
             var xl = Enumerable.Repeat(-1.0, n).ToArray();

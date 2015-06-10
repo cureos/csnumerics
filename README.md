@@ -6,6 +6,8 @@
 
 Copyright (c) 2012-1014 Anders Gustafsson, Cureos AB. Licensed under the General Public License version 3.<br />
 
+[![Build status](https://ci.appveyor.com/api/projects/status/2msksh7auurc4hu4?svg=true)](https://ci.appveyor.com/project/anders9ustafsson/csnumerics)
+
 ## Usage
 
 *CSNumerics* is a Portable Class Library (PCL) of various numerical algorithms written in C#. 

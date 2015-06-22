@@ -2,6 +2,8 @@
 
 # CSNumerics
 
+[![Join the chat at https://gitter.im/cureos/csnumerics](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/cureos/csnumerics?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 <b>Portable numerical algorithms in C#</b>
 
 Copyright (c) 2012-1014 Anders Gustafsson, Cureos AB. Licensed under the General Public License version 3.<br />

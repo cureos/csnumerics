@@ -19,6 +19,8 @@
  *  along with CSNumerics.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+using System.Linq;
+
 namespace Cureos.Numerics.Optimizers
 {
     using System;
@@ -161,5 +163,41 @@ namespace Cureos.Numerics.Optimizers
         }
 
         #endregion
+        
+        [TestCase(2, -100, -300)]
+        public void FindMinimum_EasyFun_YieldsExpectedValue(int dim, double minVal, double expect)
+        {
+            var constraintMatrix = new double[dim,dim];
+            var constraintVals = new double[dim];
+            for (int i = 0; i < dim; i++)
+            {
+                constraintMatrix[i, i] = -1;
+                constraintVals[i] = -minVal;
+            }
+
+            var lincoa = new Lincoa(EasyFun, constraintMatrix, constraintVals)
+            {
+                TrustRegionRadiusStart = 1,
+                TrustRegionRadiusEnd = 0.01,
+                MaximumFunctionCalls = 10000,
+                PrintLevel = 3,
+                Logger = Console.Out
+            };
+            var result = lincoa.FindMinimum(new double[dim]);
+
+            var actual = result.F;
+            Assert.AreEqual(expect, actual, 0.1);
+
+        }
+
+        public double EasyFun(int n, double[] x, bool isXFeasible)
+        {
+            double total = 0;
+            for (var i = 0; i < x.Length; i++)
+            {
+                total += (i + 1)*x[i];
+            }
+            return total;
+        }
     }
 }

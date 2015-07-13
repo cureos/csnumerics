@@ -495,7 +495,7 @@ namespace Cureos.Numerics.Optimizers
 //     Begin the iterative procedure.
 //
             nf = npt;
-            double fopt = fval[1 + kopt];
+            double fopt = fval[kopt];
             double rho = rhobeg;
             double delta = rho;
             int ifeas = 0;

@@ -6,7 +6,10 @@
 
 Copyright (c) 2012-1014 Anders Gustafsson, Cureos AB. Licensed under the General Public License version 3.<br />
 
+[![NuGet](https://img.shields.io/nuget/v/csnumerics.svg)](https://www.nuget.org/packages/csnumerics/)
+[![NuGet](https://img.shields.io/nuget/dt/csnumerics.svg)](https://www.nuget.org/packages/csnumerics/)
 [![Build status](https://ci.appveyor.com/api/projects/status/2msksh7auurc4hu4?svg=true)](https://ci.appveyor.com/project/anders9ustafsson/csnumerics)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/cureos/csnumerics?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 ## Usage
 

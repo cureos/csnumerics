@@ -2566,8 +2566,9 @@ namespace Cureos.Numerics.Optimizers
 
         private static string FORMAT<T>(string separator, string itemFormatter, IEnumerable<T> items, int start, int end)
         {
-            return String.Join(separator,
-                items.Skip(start).Take(end).Select(item => String.Format("{0," + itemFormatter + "}", item)));
+            return string.Join(
+                separator,
+                items.Skip(start).Take(end).Select(item => string.Format("{0," + itemFormatter + "}", item)).ToArray());
         }
         // ReSharper restore SuggestUseVarKeywordEvident
         // ReSharper restore InconsistentNaming

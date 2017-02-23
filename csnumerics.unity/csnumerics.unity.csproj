@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{1653BD71-936D-444B-9B95-C0EDB0F2128D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Cureos.Numerics</RootNamespace>
+    <AssemblyName>CSNumerics</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>..\csnumerics\csnumerics.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\csnumerics\NET35\Zip.cs">
+      <Link>NET35\Zip.cs</Link>
+    </Compile>
+    <Compile Include="..\csnumerics\Optimizers\Bobyqa.cs">
+      <Link>Optimizers\Bobyqa.cs</Link>
+    </Compile>
+    <Compile Include="..\csnumerics\Optimizers\Cobyla.cs">
+      <Link>Optimizers\Cobyla.cs</Link>
+    </Compile>
+    <Compile Include="..\csnumerics\Optimizers\IOptimizer.cs">
+      <Link>Optimizers\IOptimizer.cs</Link>
+    </Compile>
+    <Compile Include="..\csnumerics\Optimizers\IQuadraticModelOptimizer.cs">
+      <Link>Optimizers\IQuadraticModelOptimizer.cs</Link>
+    </Compile>
+    <Compile Include="..\csnumerics\Optimizers\ITrustRegionOptimizer.cs">
+      <Link>Optimizers\ITrustRegionOptimizer.cs</Link>
+    </Compile>
+    <Compile Include="..\csnumerics\Optimizers\Lincoa.cs">
+      <Link>Optimizers\Lincoa.cs</Link>
+    </Compile>
+    <Compile Include="..\csnumerics\Optimizers\OptimizationStatus.cs">
+      <Link>Optimizers\OptimizationStatus.cs</Link>
+    </Compile>
+    <Compile Include="..\csnumerics\Optimizers\OptimizationSummary.cs">
+      <Link>Optimizers\OptimizationSummary.cs</Link>
+    </Compile>
+    <Compile Include="..\csnumerics\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

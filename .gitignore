@@ -4,3 +4,6 @@
 *.suo
 *.user
 
+.vscode
+.vs
+InternalTrace.*.log

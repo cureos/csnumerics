@@ -1,21 +1,21 @@
 /*
- *  Copyright (c) 2012-2014, Cureos AB.
+ *  Copyright (c) 2012-2022, Cureos AB.
  *  All rights reserved.
  *  http://www.cureos.com
  *
  *	This file is part of CSNumerics.
  *
  *  CSNumerics is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
+ *  it under the terms of the GNU Lesser General Public License as 
+ *  published by the Free Software Foundation, either version 3 of the 
+ *  License, or (at your option) any later version.
  *
  *  CSNumerics is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  GNU Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
+ *  You should have received a copy of the GNU Lesser General Public License
  *  along with CSNumerics.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  Remarks:
@@ -24,12 +24,12 @@
  *  The Fortran 90 version was by Alan Miller (Alan.Miller @ vic.cmis.csiro.au). Latest revision - 30 October 1998
  */
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+
 namespace Cureos.Numerics.Optimizers
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-
     // ReSharper disable InconsistentNaming
 
     #region DELEGATES
@@ -49,10 +49,10 @@ namespace Cureos.Numerics.Optimizers
     /// <summary>
     /// Constrained Optimization BY Linear Approximation for .NET
     ///
-    /// COBYLA2 is an implementation of Powell’s nonlinear derivative–free constrained optimization that uses 
-    /// a linear approximation approach. The algorithm is a sequential trust–region algorithm that employs linear 
+    /// COBYLA2 is an implementation of Powellï¿½s nonlinear derivativeï¿½free constrained optimization that uses 
+    /// a linear approximation approach. The algorithm is a sequential trustï¿½region algorithm that employs linear 
     /// approximations to the objective and constraint functions, where the approximations are formed by linear 
-    /// interpolation at n + 1 points in the space of the variables and tries to maintain a regular–shaped simplex 
+    /// interpolation at n + 1 points in the space of the variables and tries to maintain a regularï¿½shaped simplex 
     /// over iterations.
     ///
     /// It solves nonsmooth NLP with a moderate number of variables (about 100). Inequality constraints only.

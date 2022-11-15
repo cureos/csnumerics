@@ -1,70 +1,33 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{75A1F6A6-7753-4B6C-B8FD-B1896C37038C}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Cureos.Numerics</RootNamespace>
-    <AssemblyName>CSNumerics</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Profile328</TargetFrameworkProfile>
-    <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\CSNumerics.XML</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup>
+    <TargetFrameworks>netstandard1.0;netstandard2.0</TargetFrameworks>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SignAssembly>true</SignAssembly>
-  </PropertyGroup>
-  <PropertyGroup>
     <AssemblyOriginatorKeyFile>csnumerics.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>csnumerics</PackageId>
+    <Title>CSNumerics</Title>
+    <PackageVersion>1.0.2.21114</PackageVersion>
+    <Authors>Anders Gustafsson, Cureos AB</Authors>
+    <PackageDescription>CSNumerics is a .NET Standard class library of various numerical algorithms written in C#.
+
+It currently consists of C# implementations of Michael J.D. Powell's optimization algorithms BOBYQA, LINCOA and COBYLA.</PackageDescription>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/cureos/csnumerics</PackageProjectUrl>
+    <PackageIcon>csnumerics.png</PackageIcon>
+    <Copyright>(c) 2012-2022 Anders Gustafsson, Cureos AB</Copyright>
+    <PackageTags>numerics optimization cobyla bobyqa lincoa dotnet dotnetstandard</PackageTags>
+    <PackRelease>true</PackRelease>
+  </PropertyGroup>
+
   <ItemGroup>
-    <Compile Include="Optimizers\Bobyqa.cs" />
-    <Compile Include="Optimizers\Cobyla.cs" />
-    <Compile Include="Optimizers\IOptimizer.cs" />
-    <Compile Include="Optimizers\IQuadraticModelOptimizer.cs" />
-    <Compile Include="Optimizers\ITrustRegionOptimizer.cs" />
-    <Compile Include="Optimizers\Lincoa.cs" />
-    <Compile Include="Optimizers\OptimizationStatus.cs" />
-    <Compile Include="Optimizers\OptimizationSummary.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Remove="NET35/Zip.cs" />
+    <None Include="../NuGet/csnumerics.png" Pack="true" PackagePath="/" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="csnumerics.snk" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\COPYING.txt">
-      <Link>COPYING.txt</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

@@ -4,15 +4,22 @@
     <TargetFrameworks>netstandard1.0;netstandard2.0</TargetFrameworks>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>csnumerics.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageId>csnumerics</PackageId>
+    <Company>Cureos</Company>
+    <Copyright>Copyright © 2012-2022 Cureos</Copyright>
+    <Description>Portable numerics library written in C#</Description>
+    <Product>CSNumerics</Product>
     <Title>CSNumerics</Title>
-    <PackageVersion>1.0.2.21114</PackageVersion>
+    <Version>1.0.2</Version>
+    <NeutralLanguage>en</NeutralLanguage>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>csnumerics</PackageId>
     <Authors>Anders Gustafsson, Cureos AB</Authors>
     <PackageDescription>CSNumerics is a .NET Standard class library of various numerical algorithms written in C#.
 
@@ -21,9 +28,9 @@ It currently consists of C# implementations of Michael J.D. Powell's optimizatio
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/cureos/csnumerics</PackageProjectUrl>
     <PackageIcon>csnumerics.png</PackageIcon>
-    <Copyright>(c) 2012-2022 Anders Gustafsson, Cureos AB</Copyright>
     <PackageTags>numerics optimization cobyla bobyqa lincoa dotnet dotnetstandard</PackageTags>
     <PackRelease>true</PackRelease>
+    <PublishRelease>true</PublishRelease>
   </PropertyGroup>
 
   <ItemGroup>

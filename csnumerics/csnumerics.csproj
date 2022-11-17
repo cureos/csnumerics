@@ -6,6 +6,7 @@
     <Nullable>disable</Nullable>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>csnumerics.snk</AssemblyOriginatorKeyFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -31,10 +32,12 @@ It currently consists of C# implementations of Michael J.D. Powell's optimizatio
     <PackageTags>numerics optimization cobyla bobyqa lincoa dotnet dotnetstandard</PackageTags>
     <PackRelease>true</PackRelease>
     <PublishRelease>true</PublishRelease>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="NET35/Zip.cs" />
-    <None Include="../NuGet/csnumerics.png" Pack="true" PackagePath="/" />
+    <None Include="../csnumerics.png" Pack="true" PackagePath="/" />
   </ItemGroup>
 </Project>

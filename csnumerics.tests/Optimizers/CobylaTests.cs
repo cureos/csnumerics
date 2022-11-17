@@ -100,7 +100,7 @@ namespace Cureos.Numerics.Optimizers
             var error1 = RunTestProblem(calcfc, n, m, rhoend1, xopt);
             Assert.Less(error1, accepted);
             var error2 = RunTestProblem(calcfc, n, m, rhoend2, xopt);
-            Assert.That(error2, Is.LessThan(error1).Within(1.0e-7));
+            Assert.That(error2, Is.LessThan(error1).Within(1.0e-8));
         }
 
         public double RunTestProblem(CalcfcDelegate calcfc, int n, int m, double rhoend, double[] xopt)

@@ -21,7 +21,7 @@
 
   <PropertyGroup>
     <PackageId>csnumerics</PackageId>
-    <Authors>Anders Gustafsson, Cureos AB</Authors>
+    <Authors>Anders Gustafsson, Cureos</Authors>
     <PackageDescription>CSNumerics is a .NET Standard class library of various numerical algorithms written in C#.
 
 It currently consists of C# implementations of Michael J.D. Powell's optimization algorithms BOBYQA, LINCOA and COBYLA.</PackageDescription>

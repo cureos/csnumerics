@@ -4,16 +4,24 @@
     <TargetFrameworks>netstandard1.0;netstandard2.0</TargetFrameworks>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>csnumerics.snk</AssemblyOriginatorKeyFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Company>Cureos</Company>
+    <Copyright>Copyright © 2012-2022 Cureos</Copyright>
+    <Description>Portable numerics library written in C#</Description>
+    <Product>CSNumerics</Product>
+    <Title>CSNumerics</Title>
+    <Version>1.0.2</Version>
+    <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 
   <PropertyGroup>
     <PackageId>csnumerics</PackageId>
-    <Title>CSNumerics</Title>
-    <PackageVersion>1.0.2.21114</PackageVersion>
-    <Authors>Anders Gustafsson, Cureos AB</Authors>
+    <Authors>Anders Gustafsson, Cureos</Authors>
     <PackageDescription>CSNumerics is a .NET Standard class library of various numerical algorithms written in C#.
 
 It currently consists of C# implementations of Michael J.D. Powell's optimization algorithms BOBYQA, LINCOA and COBYLA.</PackageDescription>
@@ -21,13 +29,15 @@ It currently consists of C# implementations of Michael J.D. Powell's optimizatio
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/cureos/csnumerics</PackageProjectUrl>
     <PackageIcon>csnumerics.png</PackageIcon>
-    <Copyright>(c) 2012-2022 Anders Gustafsson, Cureos AB</Copyright>
     <PackageTags>numerics optimization cobyla bobyqa lincoa dotnet dotnetstandard</PackageTags>
     <PackRelease>true</PackRelease>
+    <PublishRelease>true</PublishRelease>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="NET35/Zip.cs" />
-    <None Include="../NuGet/csnumerics.png" Pack="true" PackagePath="/" />
+    <None Include="../csnumerics.png" Pack="true" PackagePath="/" />
   </ItemGroup>
 </Project>

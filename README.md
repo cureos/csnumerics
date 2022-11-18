@@ -1,4 +1,4 @@
-<img src="NuGet/csnumerics.png" alt="CSNumerics logo" height="108" />
+<img src="csnumerics.png" alt="CSNumerics logo" height="108" />
 
 # CSNumerics
 

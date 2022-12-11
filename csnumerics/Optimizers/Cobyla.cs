@@ -20,8 +20,9 @@
  *
  *  Remarks:
  * 
- *  The original Fortran 77 version of this code was by Michael Powell (M.J.D.Powell @ damtp.cam.ac.uk)
- *  The Fortran 90 version was by Alan Miller (Alan.Miller @ vic.cmis.csiro.au). Latest revision - 30 October 1998
+ *  The original Fortran 77 version of this code was developed by Michael Powell
+ *  The Fortran 90 version was developed by Alan Miller 
+ *  (Alan.Miller @ vic.cmis.csiro.au). Latest revision - 30 October 1998
  */
 
 using System;

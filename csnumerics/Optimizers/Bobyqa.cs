@@ -21,7 +21,7 @@
  *  Remarks:
  * 
  *  The original Fortran 77 version of this code was developed by 
- *  Michael Powell (mjdp@cam.ac.uk) and can be downloaded from this location: 
+ *  Michael Powell and can be downloaded from this location: 
  *  http://plato.asu.edu/ftp/other_software/bobyqa.zip
  */
 

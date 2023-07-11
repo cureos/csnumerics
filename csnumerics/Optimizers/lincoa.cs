@@ -140,7 +140,7 @@ namespace Cureos.Numerics.Optimizers
         private int _maxfun;
         private int _iprint;
 
-        private TextWriter _logger;
+        private TextWriter? _logger;
 
         #endregion
 
@@ -238,7 +238,7 @@ namespace Cureos.Numerics.Optimizers
         /// <summary>
         /// Gets or sets the logger to which LINCOA log information should be sent.
         /// </summary>
-        public TextWriter Logger
+        public TextWriter? Logger
         {
             get { return _logger; }
             set { _logger = value; }
@@ -272,7 +272,7 @@ namespace Cureos.Numerics.Optimizers
 
 // ReSharper disable SuggestUseVarKeywordEvident
         private static OptimizationStatus LINCOA(LincoaCalfunDelegate calfun, int n, int npt, int m, double[,] a, double[] b,
-            double[] x, double rhobeg, double rhoend, int iprint, int maxfun, out double f, out int nf, TextWriter logger)
+            double[] x, double rhobeg, double rhoend, int iprint, int maxfun, out double f, out int nf, TextWriter? logger)
         {
             f = Double.MaxValue;
             nf = 0;
@@ -394,7 +394,7 @@ namespace Cureos.Numerics.Optimizers
         }
 
         private static OptimizationStatus LINCOB(LincoaCalfunDelegate calfun, int n, int npt, int m, double[,] amat, double[] b,
-            double[] x, double rhobeg, double rhoend, int iprint, int maxfun, out double f, out int nf, TextWriter logger)
+            double[] x, double rhobeg, double rhoend, int iprint, int maxfun, out double f, out int nf, TextWriter? logger)
         {
             OptimizationStatus? status = null;
 //
@@ -1434,7 +1434,7 @@ namespace Cureos.Numerics.Optimizers
         private static void PRELIM(LincoaCalfunDelegate calfun, int n, int npt, int m, double[,] amat, double[] b, double[] x,
             double rhobeg, int iprint, double[] xbase, double[,] xpt, double[] fval, double[] xsav, double[] xopt,
             double[] gopt, out int kopt, double[] hq, double[] pq, double[,] bmat, double[,] zmat, out int idz, int ndim,
-            double[] sp, double[] rescon, TextWriter logger)
+            double[] sp, double[] rescon, TextWriter? logger)
         {
             double[] step = new double[1 + n];
             double[] w = new double[1 + npt + n];
@@ -2559,7 +2559,7 @@ namespace Cureos.Numerics.Optimizers
             }
         }
 
-        private static void PRINT(TextWriter logger, string format, params object[] args)
+        private static void PRINT(TextWriter? logger, string format, params object[] args)
         {
             if (logger != null) logger.WriteLine(format, args);
         }

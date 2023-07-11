@@ -36,7 +36,7 @@ namespace Cureos.Numerics.Optimizers
         /// <param name="x">Optimized variable array.</param>
         /// <param name="f">Optimal value of the objective function.</param>
         /// <param name="g">If defined, values of constraint functions at optimum.</param>
-        internal OptimizationSummary(OptimizationStatus status, int nf, double[] x, double f, double[] g = null)
+        internal OptimizationSummary(OptimizationStatus status, int nf, double[]? x, double f, double[]? g = null)
         {
             Status = status;
             Evals = nf;
@@ -62,7 +62,7 @@ namespace Cureos.Numerics.Optimizers
         /// <summary>
         /// Gets the optimized variable array.
         /// </summary>
-        public double[] X { get; private set; }
+        public double[]? X { get; private set; }
 
         /// <summary>
         /// Gets the optimal value of the objective function.
@@ -72,7 +72,7 @@ namespace Cureos.Numerics.Optimizers
         /// <summary>
         /// Gets the values of the constraint functions at optimum, if defined.
         /// </summary>
-        public double[] G { get; private set; }
+        public double[]? G { get; private set; }
 
         #endregion
     }

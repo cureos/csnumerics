@@ -74,7 +74,7 @@ namespace Cureos.Numerics.Optimizers
         private double _rhobeg;
         private double _rhoend;
 
-        private TextWriter _logger;
+        private TextWriter? _logger;
 
         private static readonly string LF = Environment.NewLine;
         private static readonly string IterationResultFormatter = LF + "NFVALS = {0,5}   F = {1,13:E6}    MAXCV = {2,13:E6}";
@@ -136,7 +136,7 @@ namespace Cureos.Numerics.Optimizers
         /// <summary>
         /// Gets or sets the logger to which the optimizer log information should be sent.
         /// </summary>
-        public TextWriter Logger
+        public TextWriter? Logger
         {
             get
             {
@@ -208,7 +208,7 @@ namespace Cureos.Numerics.Optimizers
             double rhoend,
             int iprint,
             ref int iters,
-            TextWriter logger)
+            TextWriter? logger)
         {
             //     This subroutine minimizes an objective function F(X) subject to M
             //     inequality constraints on X, where X is a vector of variables that has
@@ -296,7 +296,7 @@ namespace Cureos.Numerics.Optimizers
             double rhoend,
             int iprint,
             ref int maxfun,
-            TextWriter logger)
+            TextWriter? logger)
         {
             // N.B. Arguments CON, SIM, SIMI, DATMAT, A, VSIG, VETA, SIGBAR, DX, W & IACT
             //      have been removed.

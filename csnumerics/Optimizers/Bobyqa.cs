@@ -61,8 +61,8 @@ namespace Cureos.Numerics.Optimizers
         private readonly int _n;
         private readonly BobyqaObjectiveFunctionDelegate _calfun;
 
-        private readonly double[] _xl;
-        private readonly double[] _xu;
+        private readonly double[]? _xl;
+        private readonly double[]? _xu;
         
         private int _npt;
         private int _maxfun;
@@ -71,7 +71,7 @@ namespace Cureos.Numerics.Optimizers
         private double _rhoend;
         private double _rhobeg;
 
-        private TextWriter _logger;
+        private TextWriter? _logger;
 
         private const double INF = 1.0e60;
         private const double INFMIN = -1.0e60;
@@ -111,10 +111,11 @@ namespace Cureos.Numerics.Optimizers
         /// are treated as downwards unbounded.</param>
         /// <param name="xu">Upper bounds on the variables. Array is zero-based. If set to null, all variables
         /// are treated as upwards unbounded.</param>
+        /// <param name="logger"></param>
         /// <remarks>The construction of quadratic models requires <paramref name="xl"/> to be strictly less than 
         /// <paramref name="xu"/> for each index I. Further, the contribution to a model from changes to the I-th variable is
         /// damaged severely by rounding errors if difference between upper and lower bound is too small.</remarks>
-        public Bobyqa(int n, BobyqaObjectiveFunctionDelegate calfun, double[] xl = null, double[] xu = null)
+        public Bobyqa(int n, BobyqaObjectiveFunctionDelegate calfun, double[]? xl = null, double[]? xu = null, TextWriter? logger = null)
         {
             _n = n;
             _calfun = calfun;
@@ -126,7 +127,7 @@ namespace Cureos.Numerics.Optimizers
             _rhoend = -1.0;
             _iprint = 1;
             _maxfun = 10000;
-            _logger = null;
+            _logger = logger;
         }
 
         #endregion
@@ -166,7 +167,7 @@ namespace Cureos.Numerics.Optimizers
         /// <summary>
         /// Gets or sets the logger to which the optimizer log information should be sent.
         /// </summary>
-        public TextWriter Logger
+        public TextWriter? Logger
         {
             get
             {
@@ -310,7 +311,7 @@ namespace Cureos.Numerics.Optimizers
         #region PRIVATE BOBYQA ALGORITHM METHODS
 
         private static OptimizationSummary BOBYQA(Func<int, double[], double> calfun, int n, int npt, double[] x,
-            double[] xl, double[] xu, double rhobeg, double rhoend, int iprint, int maxfun, TextWriter logger)
+            double[] xl, double[] xu, double rhobeg, double rhoend, int iprint, int maxfun, TextWriter? logger)
         {
             //     This subroutine seeks the least value of a function of many variables,
             //     by applying a trust region method that forms quadratic models by
@@ -420,7 +421,7 @@ namespace Cureos.Numerics.Optimizers
 
         private static OptimizationSummary BOBYQB(Func<int, double[], double> calfun, int n, int npt, double[] x, double[] xl,
             double[] xu, double rhobeg, double rhoend, int iprint, int maxfun, int ndim, double[] sl, double[] su,
-            TextWriter logger)
+            TextWriter? logger)
         {
             //     The arguments N, NPT, X, XL, XU, RHOBEG, RHOEND, IPRINT and MAXFUN
             //       are identical to the corresponding arguments in SUBROUTINE BOBYQA.
@@ -1562,7 +1563,7 @@ namespace Cureos.Numerics.Optimizers
         private static void PRELIM(Func<int, double[], double> calfun, int n, int npt, double[] x, 
             double[] xl, double[] xu, double rhobeg, int iprint, int maxfun, double[] xbase, double[,] xpt, 
             double[] fval, double[] gopt, double[] hq, double[] pq, double[,] bmat, double[,] zmat,
-            int ndim, double[] sl, double[] su, out int nf, out int kopt, TextWriter logger)
+            int ndim, double[] sl, double[] su, out int nf, out int kopt, TextWriter? logger)
         {
             //     The arguments N, NPT, X, XL, XU, RHOBEG, IPRINT and MAXFUN are the
             //       same as the corresponding arguments in SUBROUTINE BOBYQA.
@@ -1738,7 +1739,7 @@ namespace Cureos.Numerics.Optimizers
         private static void RESCUE(Func<int, double[], double> calfun,  int n, int npt, double[] xl, double[] xu, int iprint,
             int maxfun, double[] xbase, double[,] xpt, double[] fval, double[] xopt, double[] gopt,
             double[] hq, double[] pq, double[,] bmat, double[,] zmat, int ndim, double[] sl, double[] su,
-            ref int nf, double delta, ref int kopt, double[] vlag, TextWriter logger)
+            ref int nf, double delta, ref int kopt, double[] vlag, TextWriter? logger)
         {
             //     The arguments N, NPT, XL, XU, IPRINT, MAXFUN, XBASE, XPT, FVAL, XOPT,
             //       GOPT, HQ, PQ, BMAT, ZMAT, NDIM, SL and SU have the same meanings as

@@ -43,7 +43,7 @@ namespace Cureos.Numerics.Optimizers
         /// <summary>
         /// Gets or sets the logger to which the optimizer log information should be sent.
         /// </summary>
-        TextWriter Logger { get; set; }
+        TextWriter? Logger { get; set; }
 
         #endregion
 

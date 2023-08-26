@@ -1,3 +1,4 @@
+// ReSharper disable CommentTypo
 /*
  *  Copyright (c) 2012-2022, Cureos AB.
  *  All rights reserved.
@@ -27,6 +28,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+// ReSharper disable CompareOfFloatsByEqualityOperator
+// ReSharper disable CommentTypo
+// ReSharper disable IdentifierTypo
+// ReSharper disable StringLiteralTypo
 
 namespace Cureos.Numerics.Optimizers
 {
@@ -108,14 +113,8 @@ namespace Cureos.Numerics.Optimizers
         /// </summary>
         public int MaximumFunctionCalls
         {
-            get
-            {
-                return this._maxfun;
-            }
-            set
-            {
-                this._maxfun = value;
-            }
+            get => _maxfun;
+            set => _maxfun = value;
         }
 
         /// <summary>
@@ -123,14 +122,8 @@ namespace Cureos.Numerics.Optimizers
         /// </summary>
         public int PrintLevel
         {
-            get
-            {
-                return this._iprint;
-            }
-            set
-            {
-                this._iprint = value;
-            }
+            get => _iprint;
+            set => _iprint = value;
         }
 
         /// <summary>
@@ -138,14 +131,8 @@ namespace Cureos.Numerics.Optimizers
         /// </summary>
         public TextWriter? Logger
         {
-            get
-            {
-                return this._logger;
-            }
-            set
-            {
-                this._logger = value;
-            }
+            get => _logger;
+            set => _logger = value;
         }
 
         /// <summary>
@@ -153,14 +140,8 @@ namespace Cureos.Numerics.Optimizers
         /// </summary>
         public double TrustRegionRadiusStart
         {
-            get
-            {
-                return this._rhobeg;
-            }
-            set
-            {
-                this._rhobeg = value;
-            }
+            get => _rhobeg;
+            set => _rhobeg = value;
         }
 
         /// <summary>
@@ -168,14 +149,8 @@ namespace Cureos.Numerics.Optimizers
         /// </summary>
         public double TrustRegionRadiusEnd
         {
-            get
-            {
-                return this._rhoend;
-            }
-            set
-            {
-                this._rhoend = value;
-            }
+            get => _rhoend;
+            set => _rhoend = value;
         }
 
         #endregion
@@ -192,9 +167,8 @@ namespace Cureos.Numerics.Optimizers
             var nf = _maxfun;
             var status = COBYLA(_calcfc, _n, _m, x0, _rhobeg, _rhoend, _iprint, ref nf, _logger);
 
-            double f;
             var con = new double[_m];
-            _calcfc(_n, _m, x0, out f, con);
+            _calcfc(_n, _m, x0, out var f, con);
 
             return new OptimizationSummary(status, nf, x0, f, con);
         }
@@ -314,7 +288,7 @@ namespace Cureos.Numerics.Optimizers
             const double gamma = 0.5;
             const double delta = 1.1;
 
-            double f, resmax, total;
+            double resmax, total;
 
             var np = n + 1;
             var mp = m + 1;
@@ -369,7 +343,7 @@ namespace Cureos.Numerics.Optimizers
 
             ++nfvals;
 
-            calcfc(n, m, x, out f, con);
+            calcfc(n, m, x, out var f, con);
             resmax = 0.0;
             for (var k = 1; k <= m; ++k) resmax = Math.Max(resmax, -con[k]);
 
@@ -1347,8 +1321,8 @@ namespace Cureos.Numerics.Optimizers
         internal static string FORMAT(this double[] x)
         {
             var xStr = new string[x.Length];
-            for (var i = 0; i < x.Length; ++i) xStr[i] = String.Format("{0,13:F6}", x[i]);
-            return String.Concat(xStr);
+            for (var i = 0; i < x.Length; ++i) xStr[i] = $"{x[i],13:F6}";
+            return string.Concat(xStr);
         }
     }
 

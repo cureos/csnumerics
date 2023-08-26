@@ -26,7 +26,7 @@ namespace Cureos.Numerics.Optimizers
     /// <summary>
     /// General interface for optimizers in the CS Numerics class library.
     /// </summary>
-    interface IOptimizer
+    public interface IOptimizer
     {
         #region PROPERTIES
 

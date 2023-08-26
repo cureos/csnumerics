@@ -24,7 +24,7 @@ namespace Cureos.Numerics.Optimizers
     /// <summary>
     /// Interface for derivative-free optimizers following the basic principles of M.J.D. Powell's trust region optimizers.
     /// </summary>
-    internal interface ITrustRegionOptimizer : IOptimizer
+    public interface ITrustRegionOptimizer : IOptimizer
     {
         /// <summary>
         /// Gets or sets the final value of the trust region radius.

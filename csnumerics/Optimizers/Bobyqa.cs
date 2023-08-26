@@ -28,6 +28,11 @@
 using System;
 using System.IO;
 
+// ReSharper disable IdentifierTypo
+// ReSharper disable StringLiteralTypo
+// ReSharper disable CommentTypo
+// ReSharper disable CompareOfFloatsByEqualityOperator
+
 namespace Cureos.Numerics.Optimizers
 {
     // ReSharper disable InconsistentNaming
@@ -139,14 +144,8 @@ namespace Cureos.Numerics.Optimizers
         /// </summary>
         public int MaximumFunctionCalls
         {
-            get
-            {
-                return this._maxfun;
-            }
-            set
-            {
-                this._maxfun = value;
-            }
+            get => _maxfun;
+            set => _maxfun = value;
         }
 
         /// <summary>
@@ -154,14 +153,8 @@ namespace Cureos.Numerics.Optimizers
         /// </summary>
         public int PrintLevel
         {
-            get
-            {
-                return this._iprint;
-            }
-            set
-            {
-                this._iprint = value;
-            }
+            get => _iprint;
+            set => _iprint = value;
         }
 
         /// <summary>
@@ -169,14 +162,8 @@ namespace Cureos.Numerics.Optimizers
         /// </summary>
         public TextWriter? Logger
         {
-            get
-            {
-                return this._logger;
-            }
-            set
-            {
-                this._logger = value;
-            }
+            get => _logger;
+            set => _logger = value;
         }
 
         /// <summary>
@@ -184,14 +171,8 @@ namespace Cureos.Numerics.Optimizers
         /// </summary>
         public int InterpolationConditions
         {
-            get
-            {
-                return this._npt;
-            }
-            set
-            {
-                this._npt = value;
-            }
+            get => _npt;
+            set => _npt = value;
         }
 
         /// <summary>
@@ -199,14 +180,8 @@ namespace Cureos.Numerics.Optimizers
         /// </summary>
         public double TrustRegionRadiusEnd
         {
-            get
-            {
-                return this._rhoend;
-            }
-            set
-            {
-                this._rhoend = value;
-            }
+            get => _rhoend;
+            set => _rhoend = value;
         }
 
         /// <summary>
@@ -214,14 +189,8 @@ namespace Cureos.Numerics.Optimizers
         /// </summary>
         public double TrustRegionRadiusStart
         {
-            get
-            {
-                return this._rhobeg;
-            }
-            set
-            {
-                this._rhobeg = value;
-            }
+            get => _rhobeg;
+            set => _rhobeg = value;
         }
 
         #endregion
@@ -499,9 +468,8 @@ namespace Cureos.Numerics.Optimizers
             //     initial XOPT is set too. The branch to label 720 occurs if MAXFUN is
             //     less than NPT. GOPT will be updated if KOPT is different from KBASE.
 
-            int nf, kopt;
             PRELIM(calfun,n, npt, x, xl, xu, rhobeg, iprint, maxfun, xbase, xpt, fval, gopt, hq, pq, bmat, zmat, ndim, sl, su,
-                   out nf, out kopt, logger);
+                   out var nf, out var kopt, logger);
 
             var xoptsq = ZERO;
             for (var i = 1; i <= n; ++i)
@@ -566,8 +534,7 @@ namespace Cureos.Numerics.Optimizers
 
             L_60:
             var gnew = new double[1 + n];
-            double dsq, crvmin;
-            TRSBOX(n, npt, xpt, xopt, gopt, hq, pq, sl, su, delta, xnew, d, gnew, out dsq, out crvmin);
+            TRSBOX(n, npt, xpt, xopt, gopt, hq, pq, sl, su, delta, xnew, d, gnew, out var dsq, out var crvmin);
 
             var dnorm = Math.Min(delta, Math.Sqrt(dsq));
             if (dnorm < HALF * rho)
@@ -973,7 +940,7 @@ namespace Cureos.Numerics.Optimizers
             //     moved. Also update the second derivative terms of the model.
 
             var w = new double[1 + ndim];
-            UPDATE(n, npt, bmat, zmat, ndim, vlag, beta, denom, knew, w);
+            UPDATE(n, npt, bmat, zmat, vlag, beta, denom, knew, w);
 
             var pqold = pq[knew];
             pq[knew] = ZERO;
@@ -1369,8 +1336,7 @@ namespace Cureos.Numerics.Optimizers
                         }
                     }
 
-                //     Search along each of the other lines through XOPT and another point.
-
+                    //     Search along each of the other lines through XOPT and another point.
                 }
                 else
                 {
@@ -1836,9 +1802,7 @@ namespace Cureos.Numerics.Optimizers
                 ptsaux[2, j] = Math.Max(-delta, sl[j]);
                 if (ptsaux[1, j] + ptsaux[2, j] < ZERO)
                 {
-                    var temp = ptsaux[1, j];
-                    ptsaux[1, j] = ptsaux[2, j];
-                    ptsaux[2, j] = temp;
+                    (ptsaux[1, j], ptsaux[2, j]) = (ptsaux[2, j], ptsaux[1, j]);
                 }
                 if (Math.Abs(ptsaux[2, j]) < HALF * Math.Abs(ptsaux[1, j])) ptsaux[2, j] = HALF * ptsaux[1, j];
                 for (var i = 1; i <= ndim; ++i) bmat[i, j] = ZERO;
@@ -1906,15 +1870,11 @@ namespace Cureos.Numerics.Optimizers
             {
                 for (var j = 1; j <= n; ++j)
                 {
-                    var temp = bmat[kold, j];
-                    bmat[kold, j] = bmat[knew, j];
-                    bmat[knew, j] = temp;
+                    (bmat[kold, j], bmat[knew, j]) = (bmat[knew, j], bmat[kold, j]);
                 }
                 for (var j = 1; j <= nptm; ++j)
                 {
-                    var temp = zmat[kold, j];
-                    zmat[kold, j] = zmat[knew, j];
-                    zmat[knew, j] = temp;
+                    (zmat[kold, j], zmat[knew, j]) = (zmat[knew, j], zmat[kold, j]);
                 }
                 ptsid[kold] = ptsid[knew];
                 ptsid[knew] = ZERO;
@@ -1922,16 +1882,14 @@ namespace Cureos.Numerics.Optimizers
                 --nrem;
                 if (knew != kopt)
                 {
-                    var temp = vlag[kold];
-                    vlag[kold] = vlag[knew];
-                    vlag[knew] = temp;
+                    (vlag[kold], vlag[knew]) = (vlag[knew], vlag[kold]);
 
                     //     Update the BMAT and ZMAT matrices so that the status of the KNEW-th
                     //     interpolation point can be changed from provisional to original. The
                     //     branch to label 350 occurs if all the original points are reinstated.
                     //     The nonnegative values of W(NDIM+K) are required in the search below.
 
-                    UPDATE(n, npt, bmat, zmat, ndim, vlag, beta, denom, knew, w);
+                    UPDATE(n, npt, bmat, zmat, vlag, beta, denom, knew, w);
                     if (nrem == 0) return;
                     for (var k = 1; k <= npt; ++k) w[ndim + k] = Math.Abs(w[ndim + k]);
                 }
@@ -2612,7 +2570,7 @@ namespace Cureos.Numerics.Optimizers
             goto L_120;
         }
 
-        private static void UPDATE(int n, int npt, double[,] bmat, double[,] zmat, int ndim, double[] vlag, double beta, double denom, int knew, double[] w)
+        private static void UPDATE(int n, int npt, double[,] bmat, double[,] zmat, double[] vlag, double beta, double denom, int knew, double[] w)
         {
             //     The arrays BMAT and ZMAT are updated, as required by the new position
             //     of the interpolation point that has the index KNEW. The vector VLAG has
@@ -2692,8 +2650,8 @@ namespace Cureos.Numerics.Optimizers
         private static string ToString(double[] x, int n)
         {
             var xstr = new string[n];
-            for (var i = 0; i < n; ++i) xstr[i] = String.Format("{0,13:F6}", x[1 + i]);
-            return String.Concat(xstr);
+            for (var i = 0; i < n; ++i) xstr[i] = $"{x[1 + i],13:F6}";
+            return string.Concat(xstr);
         }
 
         #endregion

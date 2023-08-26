@@ -32,7 +32,7 @@ namespace Cureos.Numerics.Optimizers
     {
         #region Fields
 
-        private const double TOL = 1.0e-5;
+        private const double Tol = 1.0e-5;
 
         #endregion
 
@@ -46,21 +46,21 @@ namespace Cureos.Numerics.Optimizers
                 (n, x) => 10.0 * Math.Pow(x[0] * x[0] - x[1], 2.0) + Math.Pow(1.0 + x[0], 2.0));
             var summary = optimizer.FindMinimum(new[] { 1.0, -1.0 });
 
-            Assert.AreEqual(-1.0, summary.X[0], TOL);
-            Assert.AreEqual(1.0, summary.X[1], TOL);
+            Assert.AreEqual(-1.0, summary.X![0], Tol);
+            Assert.AreEqual(1.0, summary.X![1], Tol);
         }
 
         [Test]
         public void FindMinimum_HS04_ReturnsValidMinimum()
         {
-            var optimizer = new Bobyqa(2, (n, x) => Math.Pow(x[0] + 1.0, 3.0) / 3.0 + x[1], new[] { 1.0, 0.0 }, null)
+            var optimizer = new Bobyqa(2, (n, x) => Math.Pow(x[0] + 1.0, 3.0) / 3.0 + x[1], new[] { 1.0, 0.0 })
                                 {
                                     InterpolationConditions = 4
                                 };
             var result = optimizer.FindMinimum(new[] { 1.125, 0.125 });
 
-            Assert.AreEqual(1.0, result.X[0], TOL);
-            Assert.AreEqual(0.0, result.X[1], TOL);
+            Assert.AreEqual(1.0, result.X![0], Tol);
+            Assert.AreEqual(0.0, result.X![1], Tol);
         }
 
         [Test]
@@ -73,8 +73,8 @@ namespace Cureos.Numerics.Optimizers
                 new[] { 4.0, 3.0 });
             var result = optimizer.FindMinimum(new[] { 0.0, 0.0 });
 
-            Assert.AreEqual(0.5 - Math.PI / 3.0, result.X[0], TOL);
-            Assert.AreEqual(-0.5 - Math.PI / 3.0, result.X[1], TOL);
+            Assert.AreEqual(0.5 - Math.PI / 3.0, result.X![0], Tol);
+            Assert.AreEqual(-0.5 - Math.PI / 3.0, result.X![1], Tol);
         }
 
         [TestCase(5, 16)]
@@ -220,8 +220,10 @@ namespace Cureos.Numerics.Optimizers
             return Math.Abs(x - y) <= _tol ? 0 : x.CompareTo(y);
         }
 
-        int IComparer.Compare(object x, object y)
+        int IComparer.Compare(object? x, object? y)
         {
+            if (x == null) throw new ArgumentNullException(nameof(x));
+            if (y == null) throw new ArgumentNullException(nameof(y));
             return Compare((double)x, (double)y);
         }
     }

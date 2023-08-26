@@ -46,7 +46,7 @@ namespace Cureos.Numerics.Issues
 
             var summary = cobyla.FindMinimum(x0);
             Assert.AreEqual(OptimizationStatus.Normal, summary.Status);
-            Assert.IsTrue(summary.G.All(c => c >= -1.0e-6));
+            Assert.IsTrue(summary.G!.All(c => c >= -1.0e-6));
         }
 
         #endregion
@@ -78,13 +78,14 @@ namespace Cureos.Numerics.Issues
                     new[] { -0.05, -0.05, 0.0, 0.0, 0.95, 0.95, 0.0, 0.0 },
                     new[] { -0.01, 0.99, 0.0, 0.0, -0.01, 0.99, 0.0, 0.0 }
                 };
+            // ReSharper disable once InconsistentNaming
             var matrix_m_x = new double[matrix.GetLength(0)];
             sum = 0;
             for (var i = 0; i < matrix.GetLength(0); i++)
             {
                 for (var j = 0; j < matrix[i].Length; j++)
                 {
-                    matrix_m_x[i] = matrix_m_x[i] + matrix[i][j] * x[j];
+                    matrix_m_x[i] += matrix[i][j] * x[j];
                 }
                 sum += Math.Abs(matrix_m_x[i]);
             }

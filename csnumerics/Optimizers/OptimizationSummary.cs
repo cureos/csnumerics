@@ -52,27 +52,27 @@ namespace Cureos.Numerics.Optimizers
         /// <summary>
         /// Gets the status of the completed optimization.
         /// </summary>
-        public OptimizationStatus Status { get; private set; }
+        public OptimizationStatus Status { get; }
 
         /// <summary>
         /// Gets the number of function evaluations.
         /// </summary>
-        public int Evals { get; private set; }
+        public int Evals { get; }
 
         /// <summary>
         /// Gets the optimized variable array.
         /// </summary>
-        public double[]? X { get; private set; }
+        public double[]? X { get; }
 
         /// <summary>
         /// Gets the optimal value of the objective function.
         /// </summary>
-        public double F { get; private set; }
+        public double F { get; }
 
         /// <summary>
         /// Gets the values of the constraint functions at optimum, if defined.
         /// </summary>
-        public double[]? G { get; private set; }
+        public double[]? G { get; }
 
         #endregion
     }

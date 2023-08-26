@@ -29,6 +29,11 @@ using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
 
+// ReSharper disable InconsistentNaming
+// ReSharper disable IdentifierTypo
+// ReSharper disable StringLiteralTypo
+// ReSharper disable CommentTypo
+
 namespace Cureos.Numerics.Optimizers
 {
     [TestFixture]
@@ -85,7 +90,7 @@ namespace Cureos.Numerics.Optimizers
 
         #region METHODS
 
-        [TestCaseSource("TestCases")]
+        [TestCaseSource(nameof(TestCases))]
         public void TestProblem(Tuple<string, CalcfcDelegate, int, int, double[], double> testCase)
         {
             var problem = testCase.Item1;
@@ -119,7 +124,7 @@ namespace Cureos.Numerics.Optimizers
             Assert.That(result.Status,
                         Is.EqualTo(OptimizationStatus.Normal).Or.EqualTo(OptimizationStatus.MAXFUN_Reached));
 
-            var error = xopt.Select((xo, i) => Math.Pow(xo - result.X[i], 2.0)).Sum();
+            var error = xopt.Select((xo, i) => Math.Pow(xo - result.X![i], 2.0)).Sum();
             Console.WriteLine("{0}Least squares error in variables = {1,16:E6}", Environment.NewLine, error);
             Console.WriteLine("Elapsed time for optimization = {0} ms", timer.ElapsedMilliseconds);
 
